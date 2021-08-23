@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "hooplapy"
+version = "0.1.0"
+description = "Python implementation of HOOPLA - https://github.com/AntoineThiboult/HOOPLA"
+authors = ["<dev-logiciels-recherche@ulaval.ca>"]
+license = "BSD 3-Clause"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.4"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
