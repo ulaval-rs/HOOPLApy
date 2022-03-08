@@ -6,7 +6,8 @@ authors = ["<dev-logiciels-recherche@ulaval.ca>"]
 license = "BSD 3-Clause"
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.8"
+numpy = "^1.22.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
