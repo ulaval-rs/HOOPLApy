@@ -62,12 +62,30 @@ class Forecast:
 
 
 @dataclass
+class Data:
+    do_data_assimilation: bool
+    tech: str
+    Uc_Q: float
+    Uc_Pt: float
+    Uc_temp_pet: float
+    Uc_temp_snow_melt: float
+    Uc_temp_min: float
+    Uc_temp_max: float
+    Uc_E: float
+    dt: float
+    N: int
+
+    PF: Dict
+
+
+@dataclass
 class Config:
     operations: Operations
     dates: Dates
     general: General
     calibration: Calibration
     forecast: Forecast
+    data: Data
 
     def __post_init__(self):
         self.operations = Operations(**self.operations)
@@ -75,6 +93,7 @@ class Config:
         self.general = General(**self.general)
         self.calibration = Calibration(**self.calibration)
         self.forecast = Forecast(**self.forecast)
+        self.data = Data(**self.data)
 
 
 def load_config(path: str) -> Config:

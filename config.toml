@@ -37,3 +37,19 @@ issue_time = 6  # Hour of the day for which a forecast is issued (can be several
 perfect_forecast = 0  # Use meteorological observations as meteorological forecast
 horizon = 80  # Horizon of the forecast (in time steps)
 meteo_ens = 0  # Use meteorological ensemble forecast
+
+[data]
+do_data_assimilation = 1  # Perform data assimilation
+tech = 'EnKF'  # Choose either 'EnKF' (Ensemble Kalman Filter), 'PF' (particle filter), or 'PertOnly' (perturbation of inputs only)
+Uc_Q = 0.1  # Discharge (standard deviation=10# * Qobs)
+Uc_Pt = 0.5  # Rainfal (standard deviation=50# * Pt mm, reference:Liu et al 2012,Reichl 2002)
+Uc_temp_pet = 2  # temperature for PET (std deg cel)
+Uc_temp_snow_melt = 2  # temperature for snow melt(std in deg cel)
+Uc_temp_min = 2  # min temperature for snow melt(std in degree cel)
+Uc_temp_max = 2  # max temperature for snow melt(std in degree cel)
+Uc_E = 0.1  # PET (standard deviation=10# * E). Value used only if petCompute=0
+dt = 8  # delta t between two correction steps
+N = 50  # Ensemble size
+
+PF.resample_tech = 'systematic_resampling'  # resampling technique. Either 'multinomial_resampling' or 'systematic_resampling'
+PF.resample_thresh = inf  # Particle effective ensemble size before resampling. Included in [0 N]. 0 = never resample, ..., N = resample at each time step
