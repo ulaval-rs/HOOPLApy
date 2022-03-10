@@ -107,14 +107,14 @@ testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "requests", "xm
 name = "toml"
 version = "0.10.2"
 description = "Python Library for Tom's Obvious, Minimal Language"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "238f264c13290d175b4941628ed033a483235563291f990e19882a3a2351317e"
+content-hash = "aa6074ad04c258ad98582e7008c2affa96e4700a62cfc6351bae4337f1072d54"
 
 [metadata.files]
 atomicwrites = [
