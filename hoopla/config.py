@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict
+from typing import Dict, List
 
 import toml
 
@@ -74,7 +74,6 @@ class Data:
     Uc_E: float
     dt: float
     N: int
-
     PF: Dict
 
 
