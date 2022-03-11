@@ -4,22 +4,23 @@ from typing import Dict, Tuple
 import numpy
 
 from hoopla.config import Config
+from hoopla.models import PETModel, SARModel
 
 
 def check_data(
         config: Config,
-        pet_models: Dict[str, Tuple[str, str]],
-        sar_models: Dict[str, Tuple[str, str]],
+        pet_model: PETModel,
+        sar_model: SARModel,
         data_obs: Dict,
         data_meteo_forecast: Dict,
         for_ini_forecast: bool = False):
     _general_validation(data_obs)
     _calibration_validation(config, data_obs)
-    _potential_evapotranspiration(config, data_obs, pet_models)
-    _snow_accounting_validation(config, data_obs, sar_models)
+    _potential_evapotranspiration(config, data_obs, pet_model)
+    _snow_accounting_validation(config, data_obs, sar_model)
 
     if for_ini_forecast:
-        _meteorological_forecast_validation(config, data_meteo_forecast, sar_models)
+        _meteorological_forecast_validation(config, data_meteo_forecast, sar_model)
 
 
 def _general_validation(data_obs):
@@ -40,26 +41,24 @@ def _calibration_validation(config: Config, data_obs):
             data_obs['Q'][:] = numpy.NaN
 
 
-def _potential_evapotranspiration(config: Config, data_obs, pet_models):
+def _potential_evapotranspiration(config: Config, data_obs: Dict, pet_model: PETModel):
     if config.general.compute_pet:
-        for model_name, (parameter_group_1, parameter_group_2) in pet_models.items():
-            parameters = f'{parameter_group_1}_{parameter_group_2}'.split('_')
-            if len(parameters) == 0:
-                raise ValueError(f'PET:Data, data not provided for the {model_name} PET model')
+        parameters = pet_model.parameters_group_1 + pet_model.parameters_group_2
+        if len(parameters) == 0:
+            raise ValueError(f'PET:Data, data not provided for the {pet_model.name} PET model')
 
         if 'E' not in data_obs:
             data_obs['E'] = numpy.empty(data_obs['Date'].size)
             data_obs['E'][:] = numpy.NaN
 
 
-def _snow_accounting_validation(config: Config, data_obs, sar_models):
+def _snow_accounting_validation(config: Config, data_obs: Dict, sar_model: SARModel):
     if config.general.compute_snowmelt:
-        for model_name, (parameter_group_1, parameter_group_2) in sar_models.items():
-            parameters = f'{parameter_group_1}_{parameter_group_2}'.split('_')
-            if len(parameters) == 0:
-                raise ValueError(f'SAR:Data, data not provided for the {model_name} SAR model')
+        parameters = sar_model.parameters_group_1 + sar_model.parameters_group_2
+        if len(parameters) == 0:
+            raise ValueError(f'SAR:Data, data not provided for the {sar_model.name} SAR model')
 
-        if 'Tmin' not in data_obs and 'CemaNeige' in sar_models:
+        if 'Tmin' not in data_obs and 'CemaNeige' == sar_model.name:
             warnings.warn(
                 'Hydrology:Data, Tmin not provided, Tmin set to NaN. '
                 'CemaNeige: Because Tmin is missing, the USGS function is used to compute snow fraction.'
@@ -67,7 +66,7 @@ def _snow_accounting_validation(config: Config, data_obs, sar_models):
             data_obs['Tmin'] = numpy.empty(data_obs['Date'].size)
             data_obs['Tmin'][:] = numpy.NaN
 
-        if 'Tmax' not in data_obs and 'CemaNeige' in sar_models:
+        if 'Tmax' not in data_obs and 'CemaNeige' == sar_model.name:
             warnings.warn(
                 'Hydrology:Data, Tmax not provided, Tmax set to NaN. '
                 'CemaNeige: Because Tmax is missing, the USGS function is used to compute snow fraction.'
@@ -76,7 +75,7 @@ def _snow_accounting_validation(config: Config, data_obs, sar_models):
             data_obs['Tmax'][:] = numpy.NaN
 
 
-def _meteorological_forecast_validation(config: Config, data_meteo_forecast, sar_models):
+def _meteorological_forecast_validation(config: Config, data_meteo_forecast: Dict, sar_model: SARModel):
     if config.forecast.perfect_forecast == 0:
         if config.forecast.meteo_ens:
             raise NotImplemented(
@@ -97,7 +96,7 @@ def _meteorological_forecast_validation(config: Config, data_meteo_forecast, sar
             data_meteo_forecast['Tmin'] = numpy.empty(data_meteo_forecast['T'].size)
             data_meteo_forecast['Tmin'][:] = numpy.NaN
 
-            if config.general.compute_snowmelt and 'CemaNeige' in sar_models:
+            if config.general.compute_snowmelt and 'CemaNeige' == sar_model.name:
                 warnings.warn('Hydrology:Data, because the meteorological forecast for Tmin is missing, '
                               'the USGS function is used to compute snow fraction. '
                               'This may result in a decrease of performance, especially if the '
@@ -107,7 +106,7 @@ def _meteorological_forecast_validation(config: Config, data_meteo_forecast, sar
             data_meteo_forecast['Tmax'] = numpy.empty(data_meteo_forecast['T'].size)
             data_meteo_forecast['Tmax'][:] = numpy.NaN
 
-            if config.general.compute_snowmelt and 'CemaNeige' in sar_models:
+            if config.general.compute_snowmelt and 'CemaNeige' == sar_model.name:
                 warnings.warn('Hydrology:Data, because the meteorological forecast for Tmax is missing, '
                               'the USGS function is used to compute snow fraction. '
                               'This may result in a decrease of performance, especially if the '
