@@ -1,5 +1,5 @@
 import warnings
-from typing import Dict, Tuple
+from typing import Dict
 
 import numpy
 
@@ -24,9 +24,9 @@ def check_data(
 
 
 def _general_validation(data_obs):
-    if data_obs['Date'].size == 0:
+    if len(data_obs['Date']) == 0:
         raise ValueError('Hydrology:Data, Dates not provided')
-    if data_obs['Pt'].size == 0:
+    if len(data_obs['Pt']) == 0:
         raise ValueError('Hydrology:Data, Precipitations not provided')
 
 
@@ -37,7 +37,7 @@ def _calibration_validation(config: Config, data_obs):
     else:
         if 'Q' not in data_obs:
             warnings.warn('Hydrology:Data, Q data not provided, set to NaN')
-            data_obs['Q'] = numpy.empty(data_obs['Date'].size)
+            data_obs['Q'] = numpy.empty(len(data_obs['Date']))
             data_obs['Q'][:] = numpy.NaN
 
 
@@ -48,7 +48,7 @@ def _potential_evapotranspiration(config: Config, data_obs: Dict, pet_model: PET
             raise ValueError(f'PET:Data, data not provided for the {pet_model.name} PET model')
 
         if 'E' not in data_obs:
-            data_obs['E'] = numpy.empty(data_obs['Date'].size)
+            data_obs['E'] = numpy.empty(len(data_obs['Date']))
             data_obs['E'][:] = numpy.NaN
 
 
@@ -63,7 +63,7 @@ def _snow_accounting_validation(config: Config, data_obs: Dict, sar_model: SARMo
                 'Hydrology:Data, Tmin not provided, Tmin set to NaN. '
                 'CemaNeige: Because Tmin is missing, the USGS function is used to compute snow fraction.'
             )
-            data_obs['Tmin'] = numpy.empty(data_obs['Date'].size)
+            data_obs['Tmin'] = numpy.empty(len(data_obs['Date']))
             data_obs['Tmin'][:] = numpy.NaN
 
         if 'Tmax' not in data_obs and 'CemaNeige' == sar_model.name:
@@ -71,7 +71,7 @@ def _snow_accounting_validation(config: Config, data_obs: Dict, sar_model: SARMo
                 'Hydrology:Data, Tmax not provided, Tmax set to NaN. '
                 'CemaNeige: Because Tmax is missing, the USGS function is used to compute snow fraction.'
             )
-            data_obs['Tmax'] = numpy.empty(data_obs['Date'].size)
+            data_obs['Tmax'] = numpy.empty(len(data_obs['Date']))
             data_obs['Tmax'][:] = numpy.NaN
 
 
@@ -93,7 +93,7 @@ def _meteorological_forecast_validation(config: Config, data_meteo_forecast: Dic
             raise ValueError('Hydrology:Data, Meteorological mean temperature not provided.')
         if 'Tmin' not in data_meteo_forecast:
             warnings.warn('Hydrology:Data, Tmin meteorological forecast not provided. Tmin set to NaN.')
-            data_meteo_forecast['Tmin'] = numpy.empty(data_meteo_forecast['T'].size)
+            data_meteo_forecast['Tmin'] = numpy.empty(len(data_meteo_forecast['T']))
             data_meteo_forecast['Tmin'][:] = numpy.NaN
 
             if config.general.compute_snowmelt and 'CemaNeige' == sar_model.name:
@@ -103,7 +103,7 @@ def _meteorological_forecast_validation(config: Config, data_meteo_forecast: Dic
                               'Hydrodel function was used during calibration')
         if 'Tmax' not in data_meteo_forecast:
             warnings.warn('Hydrology:Data, Tmax meteorological forecast not provided. Tmin set to NaN.')
-            data_meteo_forecast['Tmax'] = numpy.empty(data_meteo_forecast['T'].size)
+            data_meteo_forecast['Tmax'] = numpy.empty(len(data_meteo_forecast['T']))
             data_meteo_forecast['Tmax'][:] = numpy.NaN
 
             if config.general.compute_snowmelt and 'CemaNeige' == sar_model.name:
