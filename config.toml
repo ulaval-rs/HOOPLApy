@@ -6,7 +6,8 @@ simulation  = true  # Run simulation
 forecast    = true  # Run forecast
 
 [dates]
-calibration.begin = 1997-01-01T03:00:00
+#calibration.begin = 1997-01-01T03:00:00
+calibration.begin = 2006-01-01T03:00:00
 calibration.end   = 2007-01-10T00:00:00
 simulation.begin  = 2010-01-01T03:00:00
 simulation.end    = 2015-01-01T00:00:00
@@ -15,10 +16,10 @@ forecast.end      = 2016-07-01T00:00:00
 
 [general]
 verbose          = true  # Verbose. Display information about computing
-time_step        = '3h'  # Computation time step. Choose between '3h' and '24h'
+time_step        = '24h'  # Computation time step. Choose between '3h' and '24h'
 compute_pet      = true  # Compute PET
 compute_snowmelt = true  # Compute snowmelt
-compute_warm_up  = true  # Add warm up before modelling
+compute_warm_up  = false  # Add warm up before modelling
 export_light     = true  # Export fewer data(/results) to save space
 overwrite        = true  # Overwrite existing files created by HOOPLA
 parallel_compute = false # Parallel computing
@@ -33,10 +34,10 @@ maxiter        = 50    # Maximum number of iteration during calibration
 SCE.ngs        = 50    # Number of Complexes for the SCE optimization
 
 [forecast]
-issue_time       = 6  # Hour of the day for which a forecast is issued (can be several per day ex: [6 12 18 24])
-perfect_forecast = 0  # Use meteorological observations as meteorological forecast
-horizon          = 80 # Horizon of the forecast (in time steps)
-meteo_ens        = 0  # Use meteorological ensemble forecast
+issue_time       = 6     # Hour of the day for which a forecast is issued (can be several per day ex: [6 12 18 24])
+perfect_forecast = false # Use meteorological observations as meteorological forecast
+horizon          = 80    # Horizon of the forecast (in time steps)
+meteo_ens        = false # Use meteorological ensemble forecast
 
 [data]
 do_data_assimilation = 1      # Perform data assimilation
