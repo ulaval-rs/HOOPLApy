@@ -5,14 +5,16 @@ from typing import Dict
 import numpy as np
 
 from hoopla.config import Config
-from hoopla.models import HydroModel, PETModel, SARModel
+from hoopla.hydro_models.hydro_model import HydroModel
+from hoopla.pet_models.pet_model import PETModel
+from hoopla.sar_models import SARModel
 
 
 def crop_data(config: Config, data_obs: Dict, model: HydroModel, pet_model: PETModel, sar_model: SARModel, ini: str):
     # Cropable data
     hydro_variables = model.parameters
-    pet_variables = pet_model.parameters_group_1 if config.general.compute_pet else []
-    sar_variables = sar_model.parameters_group_1 if config.general.compute_snowmelt else []
+    pet_variables = pet_model.parameter_group_1 if config.general.compute_pet else []
+    sar_variables = sar_model.parameter_group_1 if config.general.compute_snowmelt else []
 
     cropable_data_obs = {'Date', 'Q', *hydro_variables, *pet_variables, *sar_variables}
     cropable_data_forecast = {'Pt', 'T', 'Tmax', 'Tmin'}
@@ -40,11 +42,11 @@ def crop_data(config: Config, data_obs: Dict, model: HydroModel, pet_model: PETM
     dates = np.array([datetime(year=d[0], month=d[1], day=d[2], hour=d[3], minute=d[4], second=d[5]) for d in data_obs['Date']])
 
     ## Get indices of the dates of interest
-    # TODO: Why time step (3h or 24h) is always divided by 24?
+    # TODO: Question, why time step (3h or 24h) is always divided by 24?
     select = np.isin(dates, np.arange(date_begin, date_end, timedelta(hours=time_step / 24)).astype(datetime))
 
     ## Dates warm up
-    # TODO: Why those division on the time step?
+    # TODO: Question, why those division on the time step?
     date_begin_warm_up = date_begin - timedelta(hours=time_step) / 3 * 365
     date_end_warm_up = date_begin - timedelta(hours=time_step) / 24
     # select_warm = np.isin(dates, np.arange(date_begin_warm_up, date_end_warm_up, timedelta(hours=time_step / 24)).astype(datetime))
