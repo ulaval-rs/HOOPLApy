@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict
 
 import toml
 
@@ -99,3 +99,6 @@ def load_config(path: str) -> Config:
     configurations = toml.load(path)
 
     return Config(**configurations)
+
+
+DATA_PATH = './data'
