@@ -119,6 +119,18 @@ python-versions = ">=3.8,<3.11"
 numpy = ">=1.17.3,<1.25.0"
 
 [[package]]
+name = "spotpy"
+version = "1.5.14"
+description = "A Statistical Parameter Optimization Tool"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+numpy = "*"
+scipy = "*"
+
+[[package]]
 name = "toml"
 version = "0.10.2"
 description = "Python Library for Tom's Obvious, Minimal Language"
@@ -129,7 +141,7 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "b52d986048e5c659ffbe6ba481cae0fe52ae52f90116ae70cd3a007d21b3c2de"
+content-hash = "e8148d19c5f475830821e70d0f7f3c25527c3b138a2111996ca3a0f00f4d4c8f"
 
 [metadata.files]
 atomicwrites = [
@@ -213,6 +225,10 @@ scipy = [
     {file = "scipy-1.8.0-cp39-cp39-win32.whl", hash = "sha256:3d573228c10a3a8c32b9037be982e6440e411b443a6267b067cac72f690b8d56"},
     {file = "scipy-1.8.0-cp39-cp39-win_amd64.whl", hash = "sha256:bb7088e89cd751acf66195d2f00cf009a1ea113f3019664032d9075b1e727b6c"},
     {file = "scipy-1.8.0.tar.gz", hash = "sha256:31d4f2d6b724bc9a98e527b5849b8a7e589bf1ea630c33aa563eda912c9ff0bd"},
+]
+spotpy = [
+    {file = "spotpy-1.5.14-py3-none-any.whl", hash = "sha256:6a04d79acfb4915bc3fd16b6fe4e60df25715895b9b66368763298ce5bb7815d"},
+    {file = "spotpy-1.5.14.tar.gz", hash = "sha256:b59175fb50807b442b0d98ced7ae403778cc1cb4c2694039478fe32ea57d85c5"},
 ]
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},

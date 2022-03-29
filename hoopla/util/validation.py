@@ -8,15 +8,11 @@ from hoopla.pet_models.pet_model import PETModel
 from hoopla.sar_models import SARModel
 
 
-def check_data(
-        config: Config,
-        pet_model: PETModel,
-        sar_model: SARModel,
-        data_obs: Dict,
-        data_meteo_forecast: Dict,
-        for_ini_forecast: bool = False):
+def check_data(config: Config, pet_model: PETModel,
+               sar_model: SARModel, data_obs: Dict,
+               data_meteo_forecast: Dict, for_ini_forecast: bool = False):
     _general_validation(data_obs)
-    _calibration_validation(config, data_obs)
+    _calibration_validation(config.operations.calibration, data_obs)
 
     if config.general.compute_pet:
         _potential_evapotranspiration(data_obs, pet_model)
@@ -38,8 +34,8 @@ def _general_validation(data_obs):
         raise ValueError('Hydrology:Data, Precipitations not provided')
 
 
-def _calibration_validation(config: Config, data_obs):
-    if config.operations.calibration:
+def _calibration_validation(need_calibration: bool, data_obs):
+    if need_calibration:
         if 'Q' not in data_obs:
             raise ValueError('Q data not provided. No calibration possible')
     else:

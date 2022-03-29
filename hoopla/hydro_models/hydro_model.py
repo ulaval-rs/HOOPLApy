@@ -2,9 +2,8 @@ from typing import List
 
 import scipy.io
 
-from hoopla.config import Config
+from hoopla.config import Config, DATA_PATH
 from hoopla.hydro_models.hydro_model_1 import HydroModel1
-from hoopla.initialization import DATA_PATH
 
 HYDRO_MODELS = {
     'HydroMod1': HydroModel1,
@@ -37,12 +36,20 @@ class HydroModel:
         self.parameters = parameters
         self.model = HYDRO_MODELS[name]
 
-    def __str__(self) -> str:
-        return f'HydroModel()'
 
+def load_hydrological_models(time_step: str) -> List[HydroModel]:
+    """Load the available hydrological models.
 
-def load_models(config: Config) -> List[HydroModel]:
-    """Load hydrological models"""
-    models = scipy.io.loadmat(f'{DATA_PATH}/{config.general.time_step}/Misc/hydro_model_names.mat')
+    Parameters
+    ----------
+    time_step
+        Time Step string ('24h' or '3h')
+
+    Returns
+    -------
+    List[HydroModel]
+        List of available hydrological models.
+    """
+    models = scipy.io.loadmat(f'{DATA_PATH}/{time_step}/Misc/hydro_model_names.mat')
 
     return [HydroModel(name=i[0][0], parameters=i[1][0].split('_')) for i in models['nameM']]

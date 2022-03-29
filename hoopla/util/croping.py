@@ -10,9 +10,11 @@ from hoopla.pet_models.pet_model import PETModel
 from hoopla.sar_models import SARModel
 
 
-def crop_data(config: Config, data_obs: Dict, model: HydroModel, pet_model: PETModel, sar_model: SARModel, ini: str):
+def crop_data(config: Config, data_obs: Dict,
+              hydro_model: HydroModel, pet_model: PETModel,
+              sar_model: SARModel, ini: str):
     # Cropable data
-    hydro_variables = model.parameters
+    hydro_variables = hydro_model.parameters
     pet_variables = pet_model.parameter_group_1 if config.general.compute_pet else []
     sar_variables = sar_model.parameter_group_1 if config.general.compute_snowmelt else []
 
