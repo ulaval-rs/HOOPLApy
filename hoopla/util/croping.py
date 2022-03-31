@@ -14,7 +14,7 @@ def crop_data(config: Config, data_obs: Dict,
               hydro_model: HydroModel, pet_model: PETModel,
               sar_model: SARModel, ini: str):
     # Cropable data
-    hydro_variables = hydro_model.parameters
+    hydro_variables = hydro_model.config_parameters
     pet_variables = pet_model.parameter_group_1 if config.general.compute_pet else []
     sar_variables = sar_model.parameter_group_1 if config.general.compute_snowmelt else []
 

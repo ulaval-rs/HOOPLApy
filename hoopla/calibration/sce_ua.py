@@ -1,58 +1,26 @@
-import numpy
+from typing import Callable
+
+import numpy as np
 import spotpy
 
+from hoopla.hydro_models.hydro_model import HydroModel
 
 
 def shuffled_complex_evolution(
-        cost_function: callable,
-        x: numpy.array,
-        y: numpy.array,
-        var_min,
-        var_max,
-        nbr_of_complexes: int) -> tuple:
-    """shuffled complex evolution (sce-ua) method
+        hydro_model: HydroModel,
+        objective_function: Callable,
+        initial_parameters: np.array,
+        lower_boundaries_of_parameters: np.array,
+        upper_boundaries_of_parameters: np.array,
+        ngs: int):
+    hydro_model.setup(
+        objective_function=objective_function,
+        initial_x=initial_parameters,
+        lower_boundaries_of_x=lower_boundaries_of_parameters,
+        upper_boundaries_of_x=upper_boundaries_of_parameters
+    )
 
-    parameters
-    ----------
-    fctname
-        character string of the function to optimize.
-    x
-        the initial parameter array at the start.
-    y
-        the optimized parameter array at the end.
-    var_min
-        the lower bound of the parameters.
-    var_max
-        the upper bound of the parameters.
-    nbr_of_complexes
-        number of complexes (sub-pop.)- between 2 and 20
-    userdata (optional)
-        for the function to optimize
+    sampler = spotpy.algorithms.sceua(hydro_model, dbformat='ram')
+    sampler.sample(repetitions=1000, ngs=ngs)
 
-    results
-    -------
-    tuple
-        tuple of 3 elements:
-            bestx: best parameters
-            bestf: best value of the cost function
-            allbest: best value of the cost function for each iteration
-
-    notes
-    -----
-    copyright (c) 2015, yarpiz (www.yarpiz.com)
-    all rights reserved. please read the "license_sce.txt" for license terms.
-    project code: ypea110
-    project title: implementation of shuffled complex evolution (sce-ua)
-    publisher: yarpiz (www.yarpiz.com)
-
-    developer: s. mostapha kalami heris (member of yarpiz team)
-    contact info: sm.kalami@gmail.com, info@yarpiz.com
-
-    modification: 20/09/2017 by antoine thiboult.
-                  - modification of the file sce_ua for compatibility with ls
-                    hoopla
-                  - add a convergence criteria condition
-                  29/03/2022 by gabriel couture
-                  - traduction from matlab to python.
-    """
-
+    raise NotImplementedError

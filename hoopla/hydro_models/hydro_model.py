@@ -1,55 +1,44 @@
-from typing import List
+import abc
+from typing import Callable, List
 
-import scipy.io
-
-from hoopla.config import Config, DATA_PATH
-from hoopla.hydro_models.hydro_model_1 import HydroModel1
-
-HYDRO_MODELS = {
-    'HydroMod1': HydroModel1,
-    'HydroMod2': HydroModel1,
-    'HydroMod3': HydroModel1,
-    'HydroMod4': HydroModel1,
-    'HydroMod5': HydroModel1,
-    'HydroMod6': HydroModel1,
-    'HydroMod7': HydroModel1,
-    'HydroMod8': HydroModel1,
-    'HydroMod9': HydroModel1,
-    'HydroMod10': HydroModel1,
-    'HydroMod11': HydroModel1,
-    'HydroMod12': HydroModel1,
-    'HydroMod13': HydroModel1,
-    'HydroMod14': HydroModel1,
-    'HydroMod15': HydroModel1,
-    'HydroMod16': HydroModel1,
-    'HydroMod17': HydroModel1,
-    'HydroMod18': HydroModel1,
-    'HydroMod19': HydroModel1,
-    'HydroMod20': HydroModel1,
-}
+import spotpy
+from spotpy.parameter import Uniform
 
 
 class HydroModel:
 
-    def __init__(self, name: str, parameters: List):
+    def __init__(self, name: str, parameters: List[str]):
         self.name = name
-        self.parameters = parameters
-        self.model = HYDRO_MODELS[name]
+        self.config_parameters = parameters
 
+        self.objective_function = None
+        self.params = []
 
-def load_hydrological_models(time_step: str) -> List[HydroModel]:
-    """Load the available hydrological models.
+    def setup(self,
+              objective_function: Callable,
+              initial_x: List[float],
+              lower_boundaries_of_x: List[float],
+              upper_boundaries_of_x: List[float]):
+        self.objective_function = objective_function
 
-    Parameters
-    ----------
-    time_step
-        Time Step string ('24h' or '3h')
+        for i in range(len(initial_x)):
+            self.params.append(
+                Uniform(
+                    optguess=initial_x[i],
+                    low=lower_boundaries_of_x[i],
+                    high=upper_boundaries_of_x[i],
+                )
+            )
 
-    Returns
-    -------
-    List[HydroModel]
-        List of available hydrological models.
-    """
-    models = scipy.io.loadmat(f'{DATA_PATH}/{time_step}/Misc/hydro_model_names.mat')
+    @abc.abstractmethod
+    def prepare(self, x: List[float]):
+        raise NotImplementedError
 
-    return [HydroModel(name=i[0][0], parameters=i[1][0].split('_')) for i in models['nameM']]
+    def parameters(self):
+        return spotpy.parameter.generate(self.params)
+
+    def evaluation(self):
+        pass
+
+    def objectivefunction(self, simulation, evaluation):
+        return self.objective_function(evaluation, simulation)
