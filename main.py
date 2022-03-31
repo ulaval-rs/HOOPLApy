@@ -3,7 +3,7 @@ import hoopla
 from hoopla.initialization import list_catchments
 from hoopla.sar_models.sar_model import load_snow_models
 from hoopla.pet_models.pet_model import load_pet_models
-from hoopla.hydro_models.hydro_model import load_hydrological_models
+from hoopla.hydro_models import load_hydrological_models
 from hoopla.calibration.calibration import make_calibration
 
 config = hoopla.load_config('./config.toml')
