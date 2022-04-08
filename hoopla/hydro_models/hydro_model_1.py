@@ -1,8 +1,7 @@
-from typing import Callable, List
+from typing import List
 
 import numpy
 import numpy as np
-from spotpy.parameter import Uniform
 
 from hoopla.hydro_models.hydro_model import HydroModel
 
@@ -24,25 +23,41 @@ class HydroModel1(HydroModel):
             5. Routing reservoir emptying constant R T
         """
         drftc = numpy.ceil(x[3])
-        print(drftc)
-        k = np.linspace(0, drftc)
+        k = np.linspace(0, drftc).T
 
-        dl = numpy.zeros()
+        self.DL = 0 * k  # A zeros matrix of the size of k
+        self.DL[-2] = 1 / (x[3] - k[-2] + 1)
+        self.DL[-1] = 1 - self.DL[-2]
+        self.HY = 0 * self.DL  # A zeros matrix of the size of DL
 
         # Initialization of the reservoir states
-        S = x[0] * 0.5
-        R = 10
-        T = 5
+        self.S = x[0] * 0.5
+        self.R = 10
+        self.T = 5
 
-    def simulation(self, parameters):
+        # Initialize HydroModel1 for all time steps
+        lP = len(self.dates)
+        Qs = np.zeros((lP, 1))
+
+        return {'Qs': Qs}
+
+    # def simulation(self, dates: np.array, x: List[float]):
+    def simulation(self, x: List[float]):
+        if self.config.general.compute_warm_up:
+            raise NotImplementedError
+
+        self.prepare(x=x)
+
         data = hydro_model_1(
-            P=NotImplemented,
-            E=NotImplemented,
-            x=parameters,
-            S=NotImplemented,
-            R=NotImplemented,
-            T=NotImplemented
+            P=self.P,
+            E=self.E,
+            x=x,
+            S=self.S,
+            R=self.R,
+            T=self.T
         )
+
+        return data
 
 
 def hydro_model_1(P: float, E: float, x: List[float], S: float, R: float, T: float):

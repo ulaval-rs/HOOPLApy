@@ -46,7 +46,7 @@ def _calibration_validation(need_calibration: bool, data_obs):
 
 
 def _potential_evapotranspiration(data_obs: Dict, pet_model: PETModel):
-    parameters = pet_model.parameter_group_1 + pet_model.parameter_group_2
+    parameters = pet_model.inputs + pet_model.hyper_parameters
     if len(parameters) == 0:
         raise ValueError(f'PET:Data, data not provided for the {pet_model.name} PET model')
 
@@ -56,7 +56,7 @@ def _potential_evapotranspiration(data_obs: Dict, pet_model: PETModel):
 
 
 def _snow_accounting_validation(data_obs: Dict, sar_model: SARModel):
-    parameters = sar_model.parameter_group_1 + sar_model.parameter_group_2
+    parameters = sar_model.inputs + sar_model.hyper_parameters
     if len(parameters) == 0:
         raise ValueError(f'SAR:Data, data not provided for the {sar_model.name} SAR model')
 
