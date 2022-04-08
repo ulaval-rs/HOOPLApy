@@ -9,7 +9,7 @@ from hoopla.calibration.calibration import make_calibration
 config = hoopla.load_config('./config.toml')
 
 catchment_names = list_catchments(config.general.time_step)
-hydro_models = load_hydrological_models(config.general.time_step)
+hydro_models = load_hydrological_models(config)
 pet_models = load_pet_models(config.general.time_step) if config.general.compute_pet else []
 sar_models = load_snow_models(config.general.time_step) if config.general.compute_snowmelt else []
 

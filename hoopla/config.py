@@ -4,6 +4,8 @@ from typing import Dict
 
 import toml
 
+DATA_PATH = './data'
+
 
 @dataclass
 class Operations:
@@ -99,6 +101,3 @@ def load_config(path: str) -> Config:
     configurations = toml.load(path)
 
     return Config(**configurations)
-
-
-DATA_PATH = './data'

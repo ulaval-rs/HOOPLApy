@@ -11,10 +11,10 @@ SAR_MODELS = {
 
 class SARModel:
 
-    def __init__(self, name: str, parameter_group_1: List[str], parameter_group_2: List[str]):
+    def __init__(self, name: str, inputs: List[str], hyper_parameters: List[str]):
         self.name = name
-        self.parameter_group_1 = parameter_group_1
-        self.parameter_group_2 = parameter_group_2
+        self.inputs = inputs
+        self.hyper_parameters = hyper_parameters
         self.model = SAR_MODELS[name]
 
 
@@ -38,8 +38,8 @@ def load_snow_models(time_step: str) -> List[SARModel]:
         sar_models.append(
             SARModel(
                 name=model[0][0],
-                parameter_group_1=model[1][0].split('_'),
-                parameter_group_2=model[2][0].split('_')
+                inputs=model[1][0].split('_'),
+                hyper_parameters=model[2][0].split('_')
             )
         )
 

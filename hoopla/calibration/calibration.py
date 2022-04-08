@@ -39,8 +39,7 @@ def make_calibration(config: Config, catchment_name: str,
                      sar_model: SARModel):
     # Data specification for catchment / parameters
     data_obs = loadmat(f'{DATA_PATH}/{config.general.time_step}/Hydromet_obs/Hydromet_obs_{catchment_name}.mat')
-    data_meteo_forecast = loadmat(
-        f'{DATA_PATH}/{config.general.time_step}/Det_met_fcast/Met_fcast_{catchment_name}.mat')
+    data_meteo_forecast = loadmat(f'{DATA_PATH}/{config.general.time_step}/Det_met_fcast/Met_fcast_{catchment_name}.mat')
 
     # Validate that all necessary data are provided
     validation.check_data(config, pet_model, sar_model, data_obs, data_meteo_forecast)
@@ -59,6 +58,8 @@ def make_calibration(config: Config, catchment_name: str,
             raise NotImplementedError
         else:
             calibrate(config, data_obs, hydro_model, pet_model, sar_model)
+
+    raise NotImplementedError
 
 
 def calibrate(config: Config, data_obs: Dict, hydro_model: HydroModel, pet_model: PETModel, sar_model: SARModel):
@@ -119,6 +120,9 @@ def calibrate(config: Config, data_obs: Dict, hydro_model: HydroModel, pet_model
     elif config.calibration.method == 'SCE':
         best_parameters, best_f, all_best_f = shuffled_complex_evolution(
             hydro_model=hydro_model,
+            dates=data_obs['Date'],
+            P=data_obs['Pt'],
+            E=data_obs['E'],
             objective_function=objective_function,
             initial_parameters=initial_parameters,
             lower_boundaries_of_parameters=lower_boundaries_of_parameters,
