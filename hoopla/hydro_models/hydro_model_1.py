@@ -41,12 +41,14 @@ class HydroModel1(HydroModel):
 
         return {'Qs': Qs}
 
-    # def simulation(self, dates: np.array, x: List[float]):
     def simulation(self, x: List[float]):
         if self.config.general.compute_warm_up:
             raise NotImplementedError
 
         self.prepare(x=x)
+
+        self.pet_model.prepare(time_step=self.config.general.time_step)
+        self.E = self.pet_model.run()
 
         data = hydro_model_1(
             P=self.P,

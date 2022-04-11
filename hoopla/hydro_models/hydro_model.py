@@ -6,6 +6,7 @@ import spotpy
 from spotpy.parameter import Uniform
 
 from hoopla.config import Config
+from hoopla.pet_models import PETModel
 
 
 class HydroModel:
@@ -16,6 +17,7 @@ class HydroModel:
         self.config = config
 
         self.objective_function = None
+        self.pet_model = None
         self.dates = []
         self.params = []
 
@@ -24,10 +26,12 @@ class HydroModel:
               dates: np.array,
               P: np.array,
               E: np.array,
+              pet_model: PETModel,
               initial_x: List[float],
               lower_boundaries_of_x: List[float],
               upper_boundaries_of_x: List[float]):
         self.objective_function = objective_function
+        self.pet_model = pet_model
         self.dates = dates
         self.P = P
         self.E = E
@@ -53,7 +57,7 @@ class HydroModel:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def simulation(self, dates: np.array, x: List[float]):
+    def simulation(self, x: List[float]):
         raise NotImplementedError
 
     def objectivefunction(self, simulation, evaluation):

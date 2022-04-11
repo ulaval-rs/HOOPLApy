@@ -121,6 +121,7 @@ def calibrate(config: Config, data_obs: Dict, hydro_model: HydroModel, pet_model
         best_parameters, best_f, all_best_f = shuffled_complex_evolution(
             hydro_model=hydro_model,
             dates=data_obs['Date'],
+            pet_model=pet_model,
             P=data_obs['Pt'],
             E=data_obs['E'],
             objective_function=objective_function,

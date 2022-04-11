@@ -4,6 +4,7 @@ import numpy as np
 import spotpy
 
 from hoopla.hydro_models.hydro_model import HydroModel
+from hoopla.pet_models import PETModel
 
 
 def shuffled_complex_evolution(
@@ -11,6 +12,7 @@ def shuffled_complex_evolution(
         dates: np.array,
         P: np.array,
         E: np.array,
+        pet_model: PETModel,
         objective_function: Callable,
         initial_parameters: np.array,
         lower_boundaries_of_parameters: np.array,
@@ -18,6 +20,7 @@ def shuffled_complex_evolution(
         ngs: int):
     hydro_model.setup(
         objective_function=objective_function,
+        pet_model=pet_model,
         dates=dates,
         P=P,
         E=E,
