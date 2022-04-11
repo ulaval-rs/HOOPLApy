@@ -7,7 +7,6 @@ from hoopla.hydro_models.hydro_model import HydroModel
 
 
 class HydroModel1(HydroModel):
-
     def prepare(self, x: List[float]):
         """Initialization
 
@@ -39,7 +38,7 @@ class HydroModel1(HydroModel):
         lP = len(self.dates)
         Qs = np.zeros((lP, 1))
 
-        return {'Qs': Qs}
+        return {"Qs": Qs}
 
     # def simulation(self, dates: np.array, x: List[float]):
     def simulation(self, x: List[float]):
@@ -48,21 +47,14 @@ class HydroModel1(HydroModel):
 
         self.prepare(x=x)
 
-        data = hydro_model_1(
-            P=self.P,
-            E=self.E,
-            x=x,
-            S=self.S,
-            R=self.R,
-            T=self.T
-        )
+        data = hydro_model_1(P=self.P, E=self.E, x=x, S=self.S, R=self.R, T=self.T)
 
         return data
 
 
 def hydro_model_1(P: float, E: float, x: List[float], S: float, R: float, T: float):
     """Hydro Model 1
-    
+
     Parameters
     ----------
     P

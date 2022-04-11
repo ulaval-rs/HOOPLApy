@@ -4,7 +4,7 @@ from typing import Dict
 
 import toml
 
-DATA_PATH = './data'
+DATA_PATH = "./data"
 
 
 @dataclass

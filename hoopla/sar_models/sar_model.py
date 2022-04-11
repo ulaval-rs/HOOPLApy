@@ -5,12 +5,11 @@ import scipy.io
 from hoopla.config import Config, DATA_PATH
 
 SAR_MODELS = {
-    'CemaNeige': None,
+    "CemaNeige": None,
 }
 
 
 class SARModel:
-
     def __init__(self, name: str, inputs: List[str], hyper_parameters: List[str]):
         self.name = name
         self.inputs = inputs
@@ -31,15 +30,15 @@ def load_snow_models(time_step: str) -> List[SARModel]:
     List[SARModel]
         List of available snow accounting models (SAR models).
     """
-    models = scipy.io.loadmat(f'{DATA_PATH}/{time_step}/Misc/snow_model_names.mat')
+    models = scipy.io.loadmat(f"{DATA_PATH}/{time_step}/Misc/snow_model_names.mat")
     sar_models = []
 
-    for model in models['nameS']:
+    for model in models["nameS"]:
         sar_models.append(
             SARModel(
                 name=model[0][0],
-                inputs=model[1][0].split('_'),
-                hyper_parameters=model[2][0].split('_')
+                inputs=model[1][0].split("_"),
+                hyper_parameters=model[2][0].split("_"),
             )
         )
 

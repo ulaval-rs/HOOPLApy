@@ -9,7 +9,6 @@ from hoopla.config import Config
 
 
 class HydroModel:
-
     def __init__(self, name: str, inputs: List[str], config: Config):
         self.name = name
         self.inputs = inputs
@@ -19,14 +18,16 @@ class HydroModel:
         self.dates = []
         self.params = []
 
-    def setup(self,
-              objective_function: Callable,
-              dates: np.array,
-              P: np.array,
-              E: np.array,
-              initial_x: List[float],
-              lower_boundaries_of_x: List[float],
-              upper_boundaries_of_x: List[float]):
+    def setup(
+        self,
+        objective_function: Callable,
+        dates: np.array,
+        P: np.array,
+        E: np.array,
+        initial_x: List[float],
+        lower_boundaries_of_x: List[float],
+        upper_boundaries_of_x: List[float],
+    ):
         self.objective_function = objective_function
         self.dates = dates
         self.P = P

@@ -4,15 +4,10 @@ import scipy.io
 
 from hoopla.config import DATA_PATH
 
-PET_MODELS = {
-    'Oudin': None,
-    'Kharrufa': None,
-    'Penman': None
-}
+PET_MODELS = {"Oudin": None, "Kharrufa": None, "Penman": None}
 
 
 class PETModel:
-
     def __init__(self, name: str, inputs: List[str], hyper_parameters: List[str]):
         self.name = name
         self.inputs = inputs
@@ -33,15 +28,15 @@ def load_pet_models(time_step: str) -> List[PETModel]:
     List[PETModel]
         List of the evapotranspiration models (PET Model)
     """
-    models = scipy.io.loadmat(f'{DATA_PATH}/{time_step}/Misc/pet_model_names.mat')
+    models = scipy.io.loadmat(f"{DATA_PATH}/{time_step}/Misc/pet_model_names.mat")
     pet_models = []
 
-    for model in models['nameE']:
+    for model in models["nameE"]:
         pet_models.append(
             PETModel(
                 name=model[0][0],
-                inputs=model[1][0].split('_'),
-                hyper_parameters=model[2][0].split('_')
+                inputs=model[1][0].split("_"),
+                hyper_parameters=model[2][0].split("_"),
             )
         )
 
