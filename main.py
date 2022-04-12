@@ -28,7 +28,6 @@ hydro_model = hydro_models[0]
 pet_model = pet_models[0] if len(pet_models) != 0 else None
 sar_model = sar_models[0] if len(sar_models) != 0 else None
 
-# Making calibration
 make_calibration(
     config=config,
     catchment_name=catchment_name,

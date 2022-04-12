@@ -81,9 +81,13 @@ def calibrate(config: Config, data_for_calibration: Dict, hydro_model: HydroMode
     # Each hydrological model has its own number of parameters, thus the array.
     # ---------------------
     model_param_boundaries = loadmat(
-        f'{DATA_PATH}/{config.general.time_step}/Model_parameters/model_param_boundaries.mat', simplify_cells=True)
+        file_name=f'{DATA_PATH}/{config.general.time_step}/Model_parameters/model_param_boundaries.mat',
+        simplify_cells=True
+    )
     snow_model_param_boundaries = loadmat(
-        f'{DATA_PATH}/{config.general.time_step}/Model_parameters/snow_model_param_boundaries.mat', simplify_cells=True)
+        file_name=f'{DATA_PATH}/{config.general.time_step}/Model_parameters/snow_model_param_boundaries.mat',
+        simplify_cells=True
+    )
 
     if config.general.compute_snowmelt:
         if config.calibration.calibrate_snow:
