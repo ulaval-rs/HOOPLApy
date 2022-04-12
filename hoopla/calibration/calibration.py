@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Dict
 
 import numpy as np
@@ -38,8 +39,19 @@ def make_calibration(config: Config, catchment_name: str,
                      hydro_model: HydroModel, pet_model: PETModel,
                      sar_model: SARModel):
     # Data specification for catchment / parameters
-    data_obs = loadmat(f'{DATA_PATH}/{config.general.time_step}/Hydromet_obs/Hydromet_obs_{catchment_name}.mat')
-    data_meteo_forecast = loadmat(f'{DATA_PATH}/{config.general.time_step}/Det_met_fcast/Met_fcast_{catchment_name}.mat')
+    data_obs = loadmat(
+        file_name=f'{DATA_PATH}/{config.general.time_step}/Hydromet_obs/Hydromet_obs_{catchment_name}.mat',
+        simplify_cells=True
+    )
+    data_meteo_forecast = loadmat(
+        file_name=f'{DATA_PATH}/{config.general.time_step}/Det_met_fcast/Met_fcast_{catchment_name}.mat',
+        simplify_cells=True
+    )
+
+    # Serialized dates
+    data_obs['Date'] = np.array(
+        [datetime(year=d[0], month=d[1], day=d[2], hour=d[3], minute=d[4], second=d[5]) for d in data_obs['Date']]
+    )
 
     # Validate that all necessary data are provided
     validation.check_data(config, pet_model, sar_model, data_obs, data_meteo_forecast)
@@ -62,46 +74,49 @@ def make_calibration(config: Config, catchment_name: str,
     raise NotImplementedError
 
 
-def calibrate(config: Config, data_obs: Dict, hydro_model: HydroModel, pet_model: PETModel, sar_model: SARModel):
+def calibrate(config: Config, data_for_calibration: Dict, hydro_model: HydroModel, pet_model: PETModel,
+              sar_model: SARModel):
     # Parameters boundaries
     # Notes: The parameters are cast in an array.
     # Each hydrological model has its own number of parameters, thus the array.
     # ---------------------
-    model_param_boundaries = loadmat(f'{DATA_PATH}/{config.general.time_step}/Model_parameters/model_param_boundaries.mat')
-    snow_model_param_boundaries = loadmat(f'{DATA_PATH}/{config.general.time_step}/Model_parameters/snow_model_param_boundaries.mat')
+    model_param_boundaries = loadmat(
+        f'{DATA_PATH}/{config.general.time_step}/Model_parameters/model_param_boundaries.mat', simplify_cells=True)
+    snow_model_param_boundaries = loadmat(
+        f'{DATA_PATH}/{config.general.time_step}/Model_parameters/snow_model_param_boundaries.mat', simplify_cells=True)
 
     if config.general.compute_snowmelt:
         if config.calibration.calibrate_snow:
             initial_parameters = [
-                model_param_boundaries[hydro_model.name]['sIni'][0][0][0],
-                snow_model_param_boundaries[sar_model.name]['sIni'][0][0][0]
+                model_param_boundaries[hydro_model.name]['sIni'],
+                snow_model_param_boundaries[sar_model.name]['sIni']
             ]
             lower_boundaries_of_parameters = [
-                model_param_boundaries[hydro_model.name]['sMin'][0][0][0],
-                snow_model_param_boundaries[sar_model.name]['sMin'][0][0][0]
+                model_param_boundaries[hydro_model.name]['sMin'],
+                snow_model_param_boundaries[sar_model.name]['sMin']
             ]
             upper_boundaries_of_parameters = [
-                model_param_boundaries[hydro_model.name]['sMax'][0][0][0],
-                snow_model_param_boundaries[sar_model.name]['sMax'][0][0][0]
+                model_param_boundaries[hydro_model.name]['sMax'],
+                snow_model_param_boundaries[sar_model.name]['sMax']
             ]
         else:
             initial_parameters = [
-                model_param_boundaries[hydro_model.name]['sIni'][0][0][0],
-                snow_model_param_boundaries[sar_model.name]['default'][0][0][0]
+                model_param_boundaries[hydro_model.name]['sIni'],
+                snow_model_param_boundaries[sar_model.name]['default']
             ]
             lower_boundaries_of_parameters = [
-                model_param_boundaries[hydro_model.name]['sMin'][0][0][0],
-                snow_model_param_boundaries[sar_model.name]['default'][0][0][0]
+                model_param_boundaries[hydro_model.name]['sMin'],
+                snow_model_param_boundaries[sar_model.name]['default']
             ]
             upper_boundaries_of_parameters = [
-                model_param_boundaries[hydro_model.name]['sMax'][0][0][0],
-                snow_model_param_boundaries[sar_model.name]['default'][0][0][0]
+                model_param_boundaries[hydro_model.name]['sMax'],
+                snow_model_param_boundaries[sar_model.name]['default']
             ]
 
     else:
-        initial_parameters = model_param_boundaries[hydro_model.name]['sIni'][0][0][0]
-        lower_boundaries_of_parameters = model_param_boundaries[hydro_model.name]['sMin'][0][0][0]
-        upper_boundaries_of_parameters = model_param_boundaries[hydro_model.name]['sMax'][0][0][0]
+        initial_parameters = model_param_boundaries[hydro_model.name]['sIni']
+        lower_boundaries_of_parameters = model_param_boundaries[hydro_model.name]['sMin']
+        upper_boundaries_of_parameters = model_param_boundaries[hydro_model.name]['sMax']
 
     # Scores for the objective function
     # ---------------------------------
@@ -120,10 +135,8 @@ def calibrate(config: Config, data_obs: Dict, hydro_model: HydroModel, pet_model
     elif config.calibration.method == 'SCE':
         best_parameters, best_f, all_best_f = shuffled_complex_evolution(
             hydro_model=hydro_model,
-            dates=data_obs['Date'],
+            data_for_calibration=data_for_calibration,
             pet_model=pet_model,
-            P=data_obs['Pt'],
-            E=data_obs['E'],
             objective_function=objective_function,
             initial_parameters=initial_parameters,
             lower_boundaries_of_parameters=lower_boundaries_of_parameters,

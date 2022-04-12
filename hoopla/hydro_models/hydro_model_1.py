@@ -36,7 +36,7 @@ class HydroModel1(HydroModel):
         self.T = 5
 
         # Initialize HydroModel1 for all time steps
-        lP = len(self.dates)
+        lP = len(self.data_for_calibration['Date'])
         Qs = np.zeros((lP, 1))
 
         return {'Qs': Qs}
@@ -47,19 +47,16 @@ class HydroModel1(HydroModel):
 
         self.prepare(x=x)
 
-        self.pet_model.prepare(time_step=self.config.general.time_step)
-        self.E = self.pet_model.run()
+        if self.config.general.compute_pet:
+            self.pet_model.prepare(time_step=self.config.general.time_step, data=self.data_for_calibration)
+            self.E = self.pet_model.run()
 
-        data = hydro_model_1(
-            P=self.P,
-            E=self.E,
-            x=x,
-            S=self.S,
-            R=self.R,
-            T=self.T
-        )
+        if self.config.general.compute_snowmelt:
+            raise NotImplementedError
 
-        return data
+        result = hydro_model_1(P=self.P, E=self.E, x=x, S=self.S, R=self.R, T=self.T)
+
+        return result
 
 
 def hydro_model_1(P: float, E: float, x: List[float], S: float, R: float, T: float):
@@ -122,4 +119,5 @@ def hydro_model_1(P: float, E: float, x: List[float], S: float, R: float, T: flo
     T = T - Qt
 
     # # Total Flow calculation
-    # Qsim =
+    # Qsim = None
+    raise NotImplementedError

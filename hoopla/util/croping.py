@@ -40,15 +40,11 @@ def crop_data(config: Config, data_obs: Dict,
     ## Numerical time
     time_step = float(config.general.time_step.replace('h', ''))
 
-    ## Dates to date objects
-    dates = np.array([datetime(year=d[0], month=d[1], day=d[2], hour=d[3], minute=d[4], second=d[5]) for d in data_obs['Date']])
-
     ## Get indices of the dates of interest
-    # TODO: Question, why time step (3h or 24h) is always divided by 24?
+    dates = data_obs['Date']
     select = np.isin(dates, np.arange(date_begin, date_end, timedelta(hours=time_step / 24)).astype(datetime))
 
     ## Dates warm up
-    # TODO: Question, why those division on the time step?
     date_begin_warm_up = date_begin - timedelta(hours=time_step) / 3 * 365
     date_end_warm_up = date_begin - timedelta(hours=time_step) / 24
     # select_warm = np.isin(dates, np.arange(date_begin_warm_up, date_end_warm_up, timedelta(hours=time_step / 24)).astype(datetime))

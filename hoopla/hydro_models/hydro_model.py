@@ -1,7 +1,7 @@
 import abc
-from typing import Callable, List
+from datetime import datetime
+from typing import Callable, Dict, List, Optional
 
-import numpy as np
 import spotpy
 from spotpy.parameter import Uniform
 
@@ -17,24 +17,20 @@ class HydroModel:
         self.config = config
 
         self.objective_function = None
-        self.pet_model = None
-        self.dates = []
+        self.pet_model: Optional[PETModel] = None
+        self.data_for_calibration = {}
         self.params = []
 
     def setup(self,
               objective_function: Callable,
-              dates: np.array,
-              P: np.array,
-              E: np.array,
+              data_for_calibration: Dict,
               pet_model: PETModel,
               initial_x: List[float],
               lower_boundaries_of_x: List[float],
               upper_boundaries_of_x: List[float]):
         self.objective_function = objective_function
         self.pet_model = pet_model
-        self.dates = dates
-        self.P = P
-        self.E = E
+        self.data_for_calibration = data_for_calibration
 
         for i in range(len(initial_x)):
             self.params.append(

@@ -31,15 +31,15 @@ def load_snow_models(time_step: str) -> List[SARModel]:
     List[SARModel]
         List of available snow accounting models (SAR models).
     """
-    models = scipy.io.loadmat(f'{DATA_PATH}/{time_step}/Misc/snow_model_names.mat')
+    models = scipy.io.loadmat(f'{DATA_PATH}/{time_step}/Misc/snow_model_names.mat', simplify_cells=True)
     sar_models = []
 
     for model in models['nameS']:
         sar_models.append(
             SARModel(
-                name=model[0][0],
-                inputs=model[1][0].split('_'),
-                hyper_parameters=model[2][0].split('_')
+                name=model[0],
+                inputs=model[1].split('_'),
+                hyper_parameters=model[2].split('_')
             )
         )
 

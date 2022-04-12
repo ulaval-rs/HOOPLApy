@@ -26,12 +26,12 @@ def load_pet_models(time_step: str) -> List[PETModel]:
     List[PETModel]
         List of the evapotranspiration models (PET Model)
     """
-    models = scipy.io.loadmat(f'{DATA_PATH}/{time_step}/Misc/pet_model_names.mat')
+    models = scipy.io.loadmat(f'{DATA_PATH}/{time_step}/Misc/pet_model_names.mat', simplify_cells=True)
     pet_models = []
 
     for model in models['nameE']:
-        name = model[0][0]
-        pet_model = PET_MODELS[name](name=name, inputs=model[1][0].split('_'), hyper_parameters=model[2][0].split('_'))
+        name = model[0]
+        pet_model = PET_MODELS[name](name=name, inputs=model[1].split('_'), hyper_parameters=model[2].split('_'))
         pet_models.append(pet_model)
 
     return pet_models

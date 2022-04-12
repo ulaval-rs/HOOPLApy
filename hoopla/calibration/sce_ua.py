@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Dict
 
 import numpy as np
 import spotpy
@@ -9,9 +9,7 @@ from hoopla.pet_models import PETModel
 
 def shuffled_complex_evolution(
         hydro_model: HydroModel,
-        dates: np.array,
-        P: np.array,
-        E: np.array,
+        data_for_calibration: Dict,
         pet_model: PETModel,
         objective_function: Callable,
         initial_parameters: np.array,
@@ -21,9 +19,7 @@ def shuffled_complex_evolution(
     hydro_model.setup(
         objective_function=objective_function,
         pet_model=pet_model,
-        dates=dates,
-        P=P,
-        E=E,
+        data_for_calibration=data_for_calibration,
         initial_x=initial_parameters,
         lower_boundaries_of_x=lower_boundaries_of_parameters,
         upper_boundaries_of_x=upper_boundaries_of_parameters
