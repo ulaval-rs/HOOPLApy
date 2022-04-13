@@ -73,10 +73,14 @@ class HydroModel1(HydroModel):
                 self.T = result['T']
                 self.HY = result['HY']
 
+        # Evaluation of the calibration
+        if self.config.calibration.remove_winter:
+            raise NotImplementedError
 
+        else:
+            Qsim = np.array(self.results['Qsim'])
 
-
-        return result
+            return Qsim
 
 
 def hydro_model_1(P: float, E: float, x: List[float], S: float, R: float, T: float, DL: np.array, HY: np.array):
@@ -144,6 +148,6 @@ def hydro_model_1(P: float, E: float, x: List[float], S: float, R: float, T: flo
 
     # Total Flow calculation
     HY = HY + DL * (Qt + Qr)
-    Qsim = max(0, HY[0])
+    Qsim = max(0, HY[0])  # Simulated streamflow (Q is observed streamflow)
 
     return {'Qsim': Qsim, 'S': S, 'R': R, 'T': T, 'HY': HY}

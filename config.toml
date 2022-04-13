@@ -28,9 +28,9 @@ parallel_compute = false # Parallel computing
 export         = true  # Export calibrated parameters to ./Data for future Simulat/Forecastce calibration is performed
 calibrate_snow = false # Calibrate snow module (if 0, default values are used)
 method         = 'SCE' # Choose between 'DDS' and 'SCE'
-remove_winter  = true  # Remove the Quebec "ice months" (dec, jan, fev, mar)
+remove_winter  = false # Remove the Quebec "ice months" (dec, jan, fev, mar)
 score          = 'NSE' # Performance criteron (RMSE, MSE, NSE, etc. Enter "help det_score" in terminal to see all available scores)
-maxiter        = 50    # Maximum number of iteration during calibration
+maxiter        = 10000  # Maximum number of iteration during calibration
 SCE.ngs        = 50    # Number of Complexes for the SCE optimization
 
 [forecast]

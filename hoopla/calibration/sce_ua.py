@@ -15,7 +15,8 @@ def shuffled_complex_evolution(
         initial_parameters: np.array,
         lower_boundaries_of_parameters: np.array,
         upper_boundaries_of_parameters: np.array,
-        ngs: int):
+        ngs: int,
+        max_iteration: int):
     hydro_model.setup(
         objective_function=objective_function,
         pet_model=pet_model,
@@ -25,5 +26,5 @@ def shuffled_complex_evolution(
         upper_boundaries_of_x=upper_boundaries_of_parameters
     )
 
-    sampler = spotpy.algorithms.sceua(hydro_model, dbformat='ram')
-    sampler.sample(repetitions=1000, ngs=ngs)
+    sampler = spotpy.algorithms.sceua(hydro_model, dbname='sceua-data', dbformat='csv')
+    sampler.sample(repetitions=max_iteration, ngs=ngs)

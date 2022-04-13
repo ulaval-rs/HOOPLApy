@@ -135,9 +135,9 @@ def calibrate(config: Config, data_for_calibration: Dict, hydro_model: HydroMode
     # ---------------------
     if config.calibration.method == 'DDS':
         raise NotImplementedError
-        best_parameters, best_f, all_best_f = dynamically_dimensioned_search()
+        dynamically_dimensioned_search()
     elif config.calibration.method == 'SCE':
-        best_parameters, best_f, all_best_f = shuffled_complex_evolution(
+        best_parameters, best_f = shuffled_complex_evolution(
             hydro_model=hydro_model,
             data_for_calibration=data_for_calibration,
             pet_model=pet_model,
@@ -145,7 +145,8 @@ def calibrate(config: Config, data_for_calibration: Dict, hydro_model: HydroMode
             initial_parameters=initial_parameters,
             lower_boundaries_of_parameters=lower_boundaries_of_parameters,
             upper_boundaries_of_parameters=upper_boundaries_of_parameters,
-            ngs=config.calibration.SCE['ngs']
+            ngs=config.calibration.SCE['ngs'],
+            max_iteration=config.calibration.maxiter
         )
     else:
         raise ValueError(f'Calibration method "{config.calibration.method}" not known. '

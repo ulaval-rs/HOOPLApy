@@ -48,8 +48,9 @@ class HydroModel:
         return spotpy.parameter.generate(self.params)
 
     def evaluation(self):
-        return None
-        raise NotImplementedError
+        observed_stream_flow = self.data_for_calibration['Q']
+
+        return observed_stream_flow
 
     @abc.abstractmethod
     def simulation(self, x: List[float]):
