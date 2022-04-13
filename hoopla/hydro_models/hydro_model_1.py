@@ -22,10 +22,13 @@ class HydroModel1(HydroModel):
             4. Rainfall partitioning coefficient
             5. Routing reservoir emptying constant R T
         """
+        self.P = self.data_for_calibration['Pt']  # Precipitation
+
+        # Routing delay consideration
         drftc = numpy.ceil(x[3])
         k = np.linspace(0, drftc).T
 
-        self.DL = 0 * k  # A zeros matrix of the size of k
+        self.DL = np.zeros(k.shape)  # A zeros matrix of the size of k
         self.DL[-2] = 1 / (x[3] - k[-2] + 1)
         self.DL[-1] = 1 - self.DL[-2]
         self.HY = 0 * self.DL  # A zeros matrix of the size of DL
@@ -51,15 +54,32 @@ class HydroModel1(HydroModel):
             self.pet_model.prepare(time_step=self.config.general.time_step, data=self.data_for_calibration)
             self.E = self.pet_model.run()
 
+        # Container for results
+        self.results = {'Qsim': []}
+
+        # Running simulation
         if self.config.general.compute_snowmelt:
             raise NotImplementedError
+        else:
+            for i, _ in enumerate(self.data_for_calibration['Date']):
+                result = hydro_model_1(
+                    P=self.P[i], E=self.E[i], x=x,
+                    S=self.S, R=self.R, T=self.T, DL=self.DL, HY=self.HY)
+                self.results['Qsim'].append(result['Qsim'])
 
-        result = hydro_model_1(P=self.P, E=self.E, x=x, S=self.S, R=self.R, T=self.T)
+                # Resetting state variables
+                self.S = result['S']
+                self.R = result['R']
+                self.T = result['T']
+                self.HY = result['HY']
+
+
+
 
         return result
 
 
-def hydro_model_1(P: float, E: float, x: List[float], S: float, R: float, T: float):
+def hydro_model_1(P: float, E: float, x: List[float], S: float, R: float, T: float, DL: np.array, HY: np.array):
     """Hydro Model 1
     
     Parameters
@@ -118,6 +138,12 @@ def hydro_model_1(P: float, E: float, x: List[float], S: float, R: float, T: flo
     Qt = T / x[5]
     T = T - Qt
 
-    # # Total Flow calculation
-    # Qsim = None
-    raise NotImplementedError
+    # Shift HY values of one step (losing the first one) and set last value to 0
+    HY[:-1] = HY[1:]
+    HY[-1] = 0
+
+    # Total Flow calculation
+    HY = HY + DL * (Qt + Qr)
+    Qsim = max(0, HY[0])
+
+    return {'Qsim': Qsim, 'S': S, 'R': R, 'T': T, 'HY': HY}

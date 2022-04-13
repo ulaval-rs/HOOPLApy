@@ -93,6 +93,6 @@ class Oudin(PETModel):
         """
         E = self.Re / (self.lambda_constant * RHO) * (self.mean_air_temperature + 5) / 100  # [m/j]
         E = E * 1000  # [mm/j]
-        E = max(0, E)
+        E = np.clip(E, 0, None)  # Clip the value below 0 and set them to 0
 
         return E
