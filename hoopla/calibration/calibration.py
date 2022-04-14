@@ -74,8 +74,8 @@ def make_calibration(config: Config, catchment_name: str,
     raise NotImplementedError
 
 
-def calibrate(config: Config, data_for_calibration: Dict, hydro_model: HydroModel, pet_model: PETModel,
-              sar_model: SARModel):
+def calibrate(config: Config, data_for_calibration: Dict,
+              hydro_model: HydroModel, pet_model: PETModel, sar_model: SARModel):
     # Parameters boundaries
     # Notes: The parameters are cast in an array.
     # Each hydrological model has its own number of parameters, thus the array.
@@ -158,6 +158,29 @@ def calibrate(config: Config, data_for_calibration: Dict, hydro_model: HydroMode
             raise NotImplementedError
         else:
             raise NotImplementedError
+
+    # Compute potential evapotranspiration
+    if config.general.compute_pet:
+        pet_model.prepare(config.general.time_step, data=data_for_calibration)
+        E = pet_model.run()
+
+    # Snow accounting model initialization
+    if config.general.compute_snowmelt:
+        raise NotImplementedError
+
+    # Hydrological model initialization
+    hydro_model.prepare(best_parameters)
+
+    # Initialization of states with WarmUp
+    if config.general.compute_warm_up:
+        raise NotImplementedError
+
+    # Run Simulation
+    if config.general.compute_snowmelt:
+        raise NotImplementedError
+    else:
+        for i, date in enumerate(data_for_calibration['Date']):
+            pass
 
 
 def dynamically_dimensioned_search(s_ini: np.array, s_min: np.array, s_max: np.array, max_iter: int):

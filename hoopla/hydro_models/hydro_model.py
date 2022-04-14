@@ -49,7 +49,6 @@ class HydroModel:
 
     def evaluation(self):
         observed_stream_flow = self.data_for_calibration['Q']
-
         return observed_stream_flow
 
     @abc.abstractmethod

@@ -29,9 +29,9 @@ export         = true  # Export calibrated parameters to ./Data for future Simul
 calibrate_snow = false # Calibrate snow module (if 0, default values are used)
 method         = 'SCE' # Choose between 'DDS' and 'SCE'
 remove_winter  = false # Remove the Quebec "ice months" (dec, jan, fev, mar)
-score          = 'NSE' # Performance criteron (RMSE, MSE, NSE, etc. Enter "help det_score" in terminal to see all available scores)
-maxiter        = 10000  # Maximum number of iteration during calibration
-SCE.ngs        = 50    # Number of Complexes for the SCE optimization
+score          = 'RMSE' # Performance criteron (RMSE, MSE, NSE, etc. Enter "help det_score" in terminal to see all available scores)
+maxiter        = 400   # Maximum number of iteration during calibration
+SCE.ngs        = 6     # Number of Complexes for the SCE optimization
 
 [forecast]
 issue_time       = 6     # Hour of the day for which a forecast is issued (can be several per day ex: [6 12 18 24])

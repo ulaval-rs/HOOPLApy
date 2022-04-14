@@ -28,3 +28,18 @@ def shuffled_complex_evolution(
 
     sampler = spotpy.algorithms.sceua(hydro_model, dbname='sceua-data', dbformat='csv')
     sampler.sample(repetitions=max_iteration, ngs=ngs)
+
+    results = spotpy.analyser.load_csv_results('sceua-data')
+    max_index = np.argmin(results['like1'])
+    best_param = results['par'][max_index], results['par_1'][max_index], results['par_2'][max_index], results['par_3'][max_index], results['par_4'][max_index], results['par_5'][max_index]
+    best_cost_function_value = results['like1'][max_index]
+
+    return best_param, best_cost_function_value
+
+    # import matplotlib.pyplot as plt
+    # plt.figure(1, figsize=(9, 5))
+    # plt.plot(results['like1'])
+    # plt.ylabel('RMSE')
+    # plt.xlabel('Iteration')
+    # plt.show()
+    # exit('TODO: fix the convergence')

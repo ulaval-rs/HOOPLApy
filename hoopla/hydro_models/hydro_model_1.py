@@ -38,12 +38,6 @@ class HydroModel1(HydroModel):
         self.R = 10
         self.T = 5
 
-        # Initialize HydroModel1 for all time steps
-        lP = len(self.data_for_calibration['Date'])
-        Qs = np.zeros((lP, 1))
-
-        return {'Qs': Qs}
-
     def simulation(self, x: List[float]):
         if self.config.general.compute_warm_up:
             raise NotImplementedError
