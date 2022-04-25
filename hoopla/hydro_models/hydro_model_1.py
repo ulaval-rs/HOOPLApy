@@ -3,6 +3,7 @@ from typing import List
 import numpy
 import numpy as np
 
+from hoopla.calibration.util import find_non_winter_indexes
 from hoopla.hydro_models.hydro_model import HydroModel
 
 
@@ -67,14 +68,8 @@ class HydroModel1(HydroModel):
                 self.T = result['T']
                 self.HY = result['HY']
 
-        # Evaluation of the calibration
-        if self.config.calibration.remove_winter:
-            raise NotImplementedError
-
-        else:
-            Qsim = np.array(self.results['Qsim'])
-
-            return Qsim
+        # Returning calibration result
+        return np.array(self.results['Qsim'])
 
 
 def hydro_model_1(P: float, E: float, x: List[float], S: float, R: float, T: float, DL: np.array, HY: np.array):

@@ -1,9 +1,11 @@
 import abc
 from typing import Callable, Dict, List, Optional
 
+import numpy as np
 import spotpy
 from spotpy.parameter import Uniform
 
+from hoopla.calibration.util import find_non_winter_indexes
 from hoopla.config import Config
 from hoopla.pet_models import PETModel
 
@@ -55,5 +57,11 @@ class HydroModel:
     def simulation(self, x: List[float]):
         raise NotImplementedError
 
-    def objectivefunction(self, simulation, evaluation):
+    def objectivefunction(self, simulation: np.array, evaluation: np.array):
+        if self.config.calibration.remove_winter:
+            non_winter_indexes = find_non_winter_indexes(self.data_for_calibration['Date'])
+
+            evaluation = evaluation.take(non_winter_indexes)
+            simulation = simulation.take(non_winter_indexes)
+
         return self.objective_function(evaluation, simulation)
