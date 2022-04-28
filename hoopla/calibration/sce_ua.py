@@ -20,10 +20,14 @@ def shuffled_complex_evolution(
     hydro_model.setup(
         objective_function=objective_function,
         pet_model=pet_model,
-        data_for_calibration=data_for_calibration,
-        initial_x=initial_parameters,
-        lower_boundaries_of_x=lower_boundaries_of_parameters,
-        upper_boundaries_of_x=upper_boundaries_of_parameters
+        P=data_for_calibration['Pt'],
+        dates=data_for_calibration['Date'],
+        T=data_for_calibration['T'],
+        latitudes=data_for_calibration['Lat'],
+        observed_streamflow=data_for_calibration['Q'],
+        initial_params=initial_parameters,
+        lower_boundaries_of_params=lower_boundaries_of_parameters,
+        upper_boundaries_of_params=upper_boundaries_of_parameters
     )
 
     sampler = spotpy.algorithms.sceua(hydro_model, dbname='sceua-data', dbformat='csv')

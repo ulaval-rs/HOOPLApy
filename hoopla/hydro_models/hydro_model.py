@@ -1,5 +1,6 @@
 import abc
-from typing import Callable, Dict, List, Optional
+from datetime import datetime
+from typing import Callable, Dict, Iterable, List, Optional
 
 import numpy as np
 import spotpy
@@ -19,47 +20,85 @@ class HydroModel:
 
         self.objective_function = None
         self.pet_model: Optional[PETModel] = None
-        self.data_for_calibration = {}
         self.params = []
 
     def setup(self,
               objective_function: Callable,
-              data_for_calibration: Dict,
+              P: np.array,
+              dates: List[datetime],
+              T: List[float],
+              latitudes: List[float],
+              observed_streamflow: List[float],
               pet_model: PETModel,
-              initial_x: List[float],
-              lower_boundaries_of_x: List[float],
-              upper_boundaries_of_x: List[float]):
+              initial_params: List[float],
+              lower_boundaries_of_params: List[float],
+              upper_boundaries_of_params: List[float]):
         self.objective_function = objective_function
+        self.P = P
+        self.dates = dates
+        self.T = T
+        self.latitudes = latitudes
+        self.observed_streamflow = observed_streamflow
         self.pet_model = pet_model
-        self.data_for_calibration = data_for_calibration
 
-        for i in range(len(initial_x)):
+        for i in range(len(initial_params)):
             self.params.append(
                 Uniform(
-                    optguess=initial_x[i],
-                    low=lower_boundaries_of_x[i],
-                    high=upper_boundaries_of_x[i],
+                    optguess=initial_params[i],
+                    low=lower_boundaries_of_params[i],
+                    high=upper_boundaries_of_params[i],
                 )
             )
 
     @abc.abstractmethod
-    def prepare(self, x: List[float]):
+    def prepare(self, params: List[float]):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def run(self, model_inputs: Dict, params: Iterable, state_variables: Dict):
         raise NotImplementedError
 
     def parameters(self):
         return spotpy.parameter.generate(self.params)
 
     def evaluation(self):
-        observed_stream_flow = self.data_for_calibration['Q']
-        return observed_stream_flow
+        return self.observed_streamflow
 
-    @abc.abstractmethod
-    def simulation(self, x: List[float]):
-        raise NotImplementedError
+    def simulation(self, params: List[float]):
+        if self.config.general.compute_warm_up:
+            raise NotImplementedError
+
+        state_variables = self.prepare(params)
+
+        if self.config.general.compute_pet:
+            pet_data = self.pet_model.prepare(
+                time_step=self.config.general.time_step,
+                dates=self.dates,
+                T=self.T,
+                latitudes=self.latitudes
+            )
+            E = self.pet_model.run(pet_data)
+
+        # Container for results
+        simulated_streamflow = []
+
+        # Running simulation
+        if self.config.general.compute_snowmelt:
+            raise NotImplementedError
+        else:
+            for i, _ in enumerate(self.dates):
+                Qsim, state_variables = self.run(
+                    model_inputs={'P': self.P[i], 'E': E[i]},
+                    params=params,
+                    state_variables=state_variables
+                )
+                simulated_streamflow.append(Qsim)
+
+        return np.array(simulated_streamflow)
 
     def objectivefunction(self, simulation: np.array, evaluation: np.array):
         if self.config.calibration.remove_winter:
-            non_winter_indexes = find_non_winter_indexes(self.data_for_calibration['Date'])
+            non_winter_indexes = find_non_winter_indexes(dates=self.dates)
 
             evaluation = evaluation.take(non_winter_indexes)
             simulation = simulation.take(non_winter_indexes)

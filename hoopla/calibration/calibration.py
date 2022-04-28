@@ -135,7 +135,6 @@ def calibrate(config: Config, data_for_calibration: Dict,
     # ---------------------
     if config.calibration.method == 'DDS':
         raise NotImplementedError
-        dynamically_dimensioned_search()
     elif config.calibration.method == 'SCE':
         best_parameters, best_f = shuffled_complex_evolution(
             hydro_model=hydro_model,
@@ -161,8 +160,13 @@ def calibrate(config: Config, data_for_calibration: Dict,
 
     # Compute potential evapotranspiration
     if config.general.compute_pet:
-        pet_model.prepare(config.general.time_step, data=data_for_calibration)
-        E = pet_model.run()
+        pet_data = pet_model.prepare(
+            time_step=config.general.time_step,
+            dates=data_for_calibration['Date'],
+            T=data_for_calibration['T'],
+            latitudes=data_for_calibration['Lat']
+        )
+        E = pet_model.run(pet_data)
 
     # Snow accounting model initialization
     if config.general.compute_snowmelt:
@@ -180,37 +184,4 @@ def calibrate(config: Config, data_for_calibration: Dict,
         raise NotImplementedError
     else:
         for i, date in enumerate(data_for_calibration['Date']):
-            pass
-
-
-def dynamically_dimensioned_search(s_ini: np.array, s_min: np.array, s_max: np.array, max_iter: int):
-    """Dynamically Dimensioned Search algorithm
-
-    By Bryan Tolson.  Version 1.0.2  Oct 2005
-    Slightly modified by A. Thiboult (2017)
-
-    Parameters
-    ----------
-    s_ini
-        Initial points to evaluate. Empty vector to force a random initial evaluation.
-    s_min
-        Vector of minimum values of parameters to optimise.
-    s_max
-        Vector of maximum values of parameters to optimise.
-    max_iter
-        Maximum number of iterations.
-
-    Returns
-    -------
-    Tuple[List, List, np.array]
-        best, all_best, solution
-        
-        best: decision variables found as the best set and its function value
-        all_best: all best solutions over all iterations
-        solution: Matrix with the following structure
-            col 1: iteration number i
-            col 2: best current solution at iteration i
-            col 3: tested solution at iteration i
-            col4 to col(3 + parameters to optimise): parameters tested
-    """
-    raise NotImplementedError
+            raise NotImplementedError  # Simplement appeler le model ici
