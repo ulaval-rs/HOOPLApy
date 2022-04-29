@@ -1,16 +1,14 @@
-from datetime import datetime
 from typing import Dict
 
-import numpy as np
 from scipy.io import loadmat
 from spotpy import objectivefunctions
 
 from hoopla.calibration.sce_ua import shuffled_complex_evolution
 from hoopla.config import Config, DATA_PATH
-from hoopla.hydro_models.hydro_model import HydroModel
+from hoopla.data import validation
+from hoopla.models.hydro_model import BaseHydroModel
 from hoopla.pet_models.pet_model import PETModel
 from hoopla.sar_models.sar_model import SARModel
-from hoopla.util import validation
 from hoopla.util.croping import crop_data
 
 SCORES = {
@@ -36,29 +34,8 @@ ORIENT_SCORES = [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1]
 
 
 def make_calibration(config: Config, catchment_name: str,
-                     hydro_model: HydroModel, pet_model: PETModel,
-                     sar_model: SARModel):
-    # Data specification for catchment / parameters
-    data_obs = loadmat(
-        file_name=f'{DATA_PATH}/{config.general.time_step}/Hydromet_obs/Hydromet_obs_{catchment_name}.mat',
-        simplify_cells=True
-    )
-    data_meteo_forecast = loadmat(
-        file_name=f'{DATA_PATH}/{config.general.time_step}/Det_met_fcast/Met_fcast_{catchment_name}.mat',
-        simplify_cells=True
-    )
-
-    # Serialized dates
-    data_obs['Date'] = np.array(
-        [datetime(year=d[0], month=d[1], day=d[2], hour=d[3], minute=d[4], second=d[5]) for d in data_obs['Date']]
-    )
-
-    # Validate that all necessary data are provided
-    validation.check_data(config, pet_model, sar_model, data_obs, data_meteo_forecast)
-
-    # Crop observed data according to specified dates and warm up
-    crop_data(config, data_obs, hydro_model, pet_model, sar_model, ini='ini_calibration')
-
+                     hydro_model: BaseHydroModel, pet_model: PETModel,
+                     sar_model: SARModel, observations: dict):
     # Launch calibration
     if config.general.compute_snowmelt:
         if config.general.compute_warm_up:
@@ -75,7 +52,7 @@ def make_calibration(config: Config, catchment_name: str,
 
 
 def calibrate(config: Config, data_for_calibration: Dict,
-              hydro_model: HydroModel, pet_model: PETModel, sar_model: SARModel):
+              hydro_model: BaseHydroModel, pet_model: PETModel, sar_model: SARModel):
     # Parameters boundaries
     # Notes: The parameters are cast in an array.
     # Each hydrological model has its own number of parameters, thus the array.
@@ -132,6 +109,7 @@ def calibrate(config: Config, data_for_calibration: Dict,
     objective_function = SCORES[config.calibration.score]
 
     # Calibration
+    # This aims to find the best parameters
     # ---------------------
     if config.calibration.method == 'DDS':
         raise NotImplementedError
@@ -151,7 +129,8 @@ def calibrate(config: Config, data_for_calibration: Dict,
         raise ValueError(f'Calibration method "{config.calibration.method}" not known. '
                          'Calibration method should be "DDS" or "SCE"')
 
-    # Run simulation with best parameters
+    # ReRun simulation with best parameters
+    # -------------------------------------
     if config.general.compute_warm_up:
         if config.general.compute_snowmelt:
             raise NotImplementedError
@@ -173,15 +152,22 @@ def calibrate(config: Config, data_for_calibration: Dict,
         raise NotImplementedError
 
     # Hydrological model initialization
-    hydro_model.prepare(best_parameters)
+    state_variables = hydro_model.prepare(best_parameters)
 
     # Initialization of states with WarmUp
     if config.general.compute_warm_up:
         raise NotImplementedError
 
-    # Run Simulation
+    # Simulation with best param
+    simulated_streamflow = []
+
     if config.general.compute_snowmelt:
         raise NotImplementedError
     else:
-        for i, date in enumerate(data_for_calibration['Date']):
-            raise NotImplementedError  # Simplement appeler le model ici
+        for i, _ in enumerate(data_for_calibration['Date']):
+            model_inputs = {'P': data_for_calibration['Pt'][i], 'E': E[i]}
+            Qsim, state_variables = hydro_model.run(model_inputs, best_parameters, state_variables)
+
+            simulated_streamflow.append(Qsim)
+
+    return simulated_streamflow

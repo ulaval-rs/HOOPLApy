@@ -2,10 +2,13 @@ from typing import Dict, List, Sequence, Tuple
 
 import numpy as np
 
-from hoopla.hydro_models.hydro_model import HydroModel
+from hoopla.models.hydro_model import BaseHydroModel
 
 
-class HydroModel1(HydroModel):
+class HydroModel(BaseHydroModel):
+
+    def inputs(self):
+        return ['P', 'E']
 
     def prepare(self, params: List[float]) -> Dict:
         """Setup state variables

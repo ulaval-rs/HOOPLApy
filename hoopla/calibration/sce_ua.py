@@ -3,12 +3,12 @@ from typing import Callable, Dict
 import numpy as np
 import spotpy
 
-from hoopla.hydro_models.hydro_model import HydroModel
+from hoopla.models.hydro_model import BaseHydroModel
 from hoopla.pet_models import PETModel
 
 
 def shuffled_complex_evolution(
-        hydro_model: HydroModel,
+        hydro_model: BaseHydroModel,
         data_for_calibration: Dict,
         pet_model: PETModel,
         objective_function: Callable,
@@ -38,8 +38,6 @@ def shuffled_complex_evolution(
     best_param = results['par'][max_index], results['par_1'][max_index], results['par_2'][max_index], results['par_3'][max_index], results['par_4'][max_index], results['par_5'][max_index]
     best_cost_function_value = results['like1'][max_index]
 
-    return best_param, best_cost_function_value
-
     # import matplotlib.pyplot as plt
     # plt.figure(1, figsize=(9, 5))
     # plt.plot(results['like1'])
@@ -47,3 +45,6 @@ def shuffled_complex_evolution(
     # plt.xlabel('Iteration')
     # plt.show()
     # exit('TODO: fix the convergence')
+
+    return best_param, best_cost_function_value
+

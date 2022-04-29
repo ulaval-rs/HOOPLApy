@@ -5,16 +5,16 @@ from typing import Dict
 import numpy as np
 
 from hoopla.config import Config
-from hoopla.hydro_models.hydro_model import HydroModel
+from hoopla.models.hydro_model import BaseHydroModel
 from hoopla.pet_models.pet_model import PETModel
 from hoopla.sar_models import SARModel
 
 
 def crop_data(config: Config, data_obs: Dict,
-              hydro_model: HydroModel, pet_model: PETModel,
+              hydro_model: BaseHydroModel, pet_model: PETModel,
               sar_model: SARModel, ini: str):
     # Cropable data
-    hydro_variables = hydro_model.inputs
+    hydro_variables = hydro_model.inputs()
     pet_variables = pet_model.inputs if config.general.compute_pet else []
     sar_variables = sar_model.inputs if config.general.compute_snowmelt else []
 

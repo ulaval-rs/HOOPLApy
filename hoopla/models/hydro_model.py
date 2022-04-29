@@ -1,6 +1,6 @@
 import abc
 from datetime import datetime
-from typing import Callable, Dict, Iterable, List, Optional
+from typing import Callable, Dict, Iterable, Optional, Sequence
 
 import numpy as np
 import spotpy
@@ -11,28 +11,34 @@ from hoopla.config import Config
 from hoopla.pet_models import PETModel
 
 
-class HydroModel:
+class BaseHydroModel:
 
-    def __init__(self, name: str, inputs: List[str], config: Config):
-        self.name = name
-        self.inputs = inputs
-        self.config = config
+    def __init__(self):
+        self.ready = False  # Indicate if the model is ready to use (need to setup first)
 
-        self.objective_function = None
+        # Defining variables to be set
+        self.config: Optional[Config] = None
+        self.objective_function: Optional[Callable] = None
         self.pet_model: Optional[PETModel] = None
-        self.params = []
+        self.params: list[Uniform] = []
+        self.dates: Optional[Sequence] = None
+        self.P: Optional[Sequence] = None
+        self.T: Optional[Sequence] = None
+        self.latitudes: Optional[Sequence] = None
+        self.observed_streamflow: Optional[Sequence] = None
 
     def setup(self,
+              config: Config,
               objective_function: Callable,
               P: np.array,
-              dates: List[datetime],
-              T: List[float],
-              latitudes: List[float],
-              observed_streamflow: List[float],
+              dates: list[datetime],
+              T: list[float],
+              latitudes: list[float],
+              observed_streamflow: list[float],
               pet_model: PETModel,
-              initial_params: List[float],
-              lower_boundaries_of_params: List[float],
-              upper_boundaries_of_params: List[float]):
+              initial_params: list[float],
+              lower_boundaries_of_params: list[float],
+              upper_boundaries_of_params: list[float]):
         self.objective_function = objective_function
         self.P = P
         self.dates = dates
@@ -50,8 +56,14 @@ class HydroModel:
                 )
             )
 
+        self.ready = True
+
     @abc.abstractmethod
-    def prepare(self, params: List[float]):
+    def prepare(self, params: list[float]):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def inputs(self) -> list[str]:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -64,7 +76,10 @@ class HydroModel:
     def evaluation(self):
         return self.observed_streamflow
 
-    def simulation(self, params: List[float]):
+    def simulation(self, params: list[float]):
+        if not self.ready:
+            raise Exception('Model should be "setup()" to be used.')
+
         if self.config.general.compute_warm_up:
             raise NotImplementedError
 

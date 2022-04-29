@@ -1,61 +1,58 @@
 import warnings
-from typing import Dict
 
 import numpy
 
 from hoopla.config import Config
+from hoopla.data.observations import Observations
 from hoopla.pet_models.pet_model import PETModel
 from hoopla.sar_models import SARModel
 
 
 def check_data(config: Config, pet_model: PETModel,
-               sar_model: SARModel, data_obs: Dict,
-               data_meteo_forecast: Dict, for_ini_forecast: bool = False):
-    _general_validation(data_obs)
-    _calibration_validation(config.operations.calibration, data_obs)
-
+               sar_model: SARModel, observations: Observations,
+               data_meteo_forecast: dict, for_ini_forecast: bool = False):
     if config.general.compute_pet:
-        _potential_evapotranspiration(data_obs, pet_model)
-    elif 'E' not in data_obs:
+        potential_evapotranspiration(observations, pet_model)
+    elif 'E' not in observations:
         raise ValueError('Hydrology:Data, Potential evapotranspiration not provided')
 
     if config.general.compute_snowmelt:
-        _snow_accounting_validation(data_obs, sar_model)
+        snow_accounting_validation(observations, sar_model)
 
     if for_ini_forecast:
-        _meteorological_forecast_validation(config, data_meteo_forecast, sar_model)
+        meteorological_forecast_validation(config, data_meteo_forecast, sar_model)
 
 
-def _general_validation(data_obs):
-    if len(data_obs['Date']) == 0:
+def general_validation(observation_dict: dict):
+    if 'dates' not in observation_dict:
         raise ValueError('Hydrology:Data, Dates not provided')
 
-    if len(data_obs['Pt']) == 0:
+    if 'P' not in observation_dict:
         raise ValueError('Hydrology:Data, Precipitations not provided')
 
 
-def _calibration_validation(need_calibration: bool, data_obs):
+def calibration_validation(need_calibration: bool, observation_dict: dict):
     if need_calibration:
-        if 'Q' not in data_obs:
+        if 'Q' not in observation_dict:
             raise ValueError('Q data not provided. No calibration possible')
     else:
-        if 'Q' not in data_obs:
+        if 'Q' not in observation_dict:
             warnings.warn('Hydrology:Data, Q data not provided, set to NaN')
-            data_obs['Q'] = numpy.empty(len(data_obs['Date']))
-            data_obs['Q'][:] = numpy.NaN
+            observation_dict['Q'] = numpy.empty(len(observation_dict['dates']))
+            observation_dict['Q'][:] = numpy.NaN
 
 
-def _potential_evapotranspiration(data_obs: Dict, pet_model: PETModel):
+def potential_evapotranspiration(data_obs: dict, pet_model: PETModel):
     parameters = pet_model.inputs + pet_model.hyper_parameters
     if len(parameters) == 0:
         raise ValueError(f'PET:Data, data not provided for the {pet_model.name} PET model')
 
     if 'E' not in data_obs:
-        data_obs['E'] = numpy.empty(len(data_obs['Date']))
+        data_obs['E'] = numpy.empty(len(data_obs['dates']))
         data_obs['E'][:] = numpy.NaN
 
 
-def _snow_accounting_validation(data_obs: Dict, sar_model: SARModel):
+def snow_accounting_validation(data_obs: dict, sar_model: SARModel):
     parameters = sar_model.inputs + sar_model.hyper_parameters
     if len(parameters) == 0:
         raise ValueError(f'SAR:Data, data not provided for the {sar_model.name} SAR model')
@@ -77,7 +74,7 @@ def _snow_accounting_validation(data_obs: Dict, sar_model: SARModel):
         data_obs['Tmax'][:] = numpy.NaN
 
 
-def _meteorological_forecast_validation(config: Config, data_meteo_forecast: Dict, sar_model: SARModel):
+def meteorological_forecast_validation(config: Config, data_meteo_forecast: dict, sar_model: SARModel):
     if config.forecast.perfect_forecast == 0:
         if config.forecast.meteo_ens:
             raise NotImplemented(
@@ -120,7 +117,7 @@ def _meteorological_forecast_validation(config: Config, data_meteo_forecast: Dic
                               'This may result in a decrease of performance, especially if the '
                               'Hydrodel function was used during calibration')
 
-        if config.forecast.horizon > len(data_meteo_forecast['Pt'][1]):
+        if config.forecast.horizon > len(data_meteo_forecast['Pt']):
             raise ValueError('Hydrology:Data, The specified forecast horizon is longer '
                              'than the meteorological forecast horizon')
 
