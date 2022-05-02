@@ -4,13 +4,13 @@ import numpy as np
 import spotpy
 
 from hoopla.models.hydro_model import BaseHydroModel
-from hoopla.pet_models import PETModel
+from hoopla.models.pet_model import BasePETModel
 
 
 def shuffled_complex_evolution(
         hydro_model: BaseHydroModel,
         data_for_calibration: Dict,
-        pet_model: PETModel,
+        pet_model: BasePETModel,
         objective_function: Callable,
         initial_parameters: np.array,
         lower_boundaries_of_parameters: np.array,

@@ -6,19 +6,19 @@ import numpy as np
 
 from hoopla.config import Config
 from hoopla.models.hydro_model import BaseHydroModel
-from hoopla.pet_models.pet_model import PETModel
+from hoopla.models.pet_model import BasePETModel
 from hoopla.sar_models import SARModel
 
 
-def crop_data(config: Config, data_obs: Dict,
-              hydro_model: BaseHydroModel, pet_model: PETModel,
+def crop_data(config: Config, observations: Dict,
+              hydro_model: BaseHydroModel, pet_model: BasePETModel,
               sar_model: SARModel, ini: str):
     # Cropable data
     hydro_variables = hydro_model.inputs()
-    pet_variables = pet_model.inputs if config.general.compute_pet else []
+    pet_variables = pet_model.inputs() if config.general.compute_pet else []
     sar_variables = sar_model.inputs if config.general.compute_snowmelt else []
 
-    cropable_data_obs = {'Date', 'Q', *hydro_variables, *pet_variables, *sar_variables}
+    cropable_data_obs = {'dates', 'Q', *hydro_variables, *pet_variables, *sar_variables}
     cropable_data_forecast = {'Pt', 'T', 'Tmax', 'Tmin'}
 
     # Dates
@@ -41,7 +41,7 @@ def crop_data(config: Config, data_obs: Dict,
     time_step = float(config.general.time_step.replace('h', ''))
 
     ## Get indices of the dates of interest
-    dates = data_obs['Date']
+    dates = observations['dates']
     select = np.isin(dates, np.arange(date_begin, date_end, timedelta(hours=time_step / 24)).astype(datetime))
 
     ## Dates warm up
@@ -70,15 +70,15 @@ def crop_data(config: Config, data_obs: Dict,
         raise NotImplementedError
 
     for obs in cropable_data_obs:
-        data_obs[obs] = data_obs[obs][select]
+        observations[obs] = observations[obs][select]
 
     ## Checking ratio of streamflow NaN
-    if np.sum(np.isnan(data_obs['Q'])) / len(data_obs['Q']) > 0.75:
+    if np.sum(np.isnan(observations['Q'])) / len(observations['Q']) > 0.75:
         warnings.warn(
-            f'Hydrology:StreamflowData, Only {100*(1- np.sum(np.isnan(data_obs["Q"])) / len(data_obs["Q"])):.1f} % '
+            f'Hydrology:StreamflowData, Only {100*(1 - np.sum(np.isnan(observations["Q"])) / len(observations["Q"])):.1f} % '
             f'of streamflow are not NaN. Consider changing the period'
         )
-        if ini == 'ini_calibration' and np.sum(np.isnan(data_obs['Q'])) == 0:
+        if ini == 'ini_calibration' and np.sum(np.isnan(observations['Q'])) == 0:
             raise ValueError('All streamflow are NaN. The calibration is not possible. Please, change calibration dates')
 
 

@@ -4,11 +4,11 @@ import numpy
 
 from hoopla.config import Config
 from hoopla.data.observations import Observations
-from hoopla.pet_models.pet_model import PETModel
+from hoopla.models.pet_model import BasePETModel
 from hoopla.sar_models import SARModel
 
 
-def check_data(config: Config, pet_model: PETModel,
+def check_data(config: Config, pet_model: BasePETModel,
                sar_model: SARModel, observations: Observations,
                data_meteo_forecast: dict, for_ini_forecast: bool = False):
     if config.general.compute_pet:
@@ -42,8 +42,8 @@ def calibration_validation(need_calibration: bool, observation_dict: dict):
             observation_dict['Q'][:] = numpy.NaN
 
 
-def potential_evapotranspiration(data_obs: dict, pet_model: PETModel):
-    parameters = pet_model.inputs + pet_model.hyper_parameters
+def potential_evapotranspiration(data_obs: dict, pet_model: BasePETModel):
+    parameters = pet_model.inputs() + pet_model.hyper_parameters()
     if len(parameters) == 0:
         raise ValueError(f'PET:Data, data not provided for the {pet_model.name} PET model')
 

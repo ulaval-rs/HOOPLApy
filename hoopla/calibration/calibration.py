@@ -7,7 +7,7 @@ from hoopla.calibration.sce_ua import shuffled_complex_evolution
 from hoopla.config import Config, DATA_PATH
 from hoopla.data import validation
 from hoopla.models.hydro_model import BaseHydroModel
-from hoopla.pet_models.pet_model import PETModel
+from hoopla.models.pet_model import BasePETModel
 from hoopla.sar_models.sar_model import SARModel
 from hoopla.util.croping import crop_data
 
@@ -34,7 +34,7 @@ ORIENT_SCORES = [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1]
 
 
 def make_calibration(config: Config, catchment_name: str,
-                     hydro_model: BaseHydroModel, pet_model: PETModel,
+                     hydro_model: BaseHydroModel, pet_model: BasePETModel,
                      sar_model: SARModel, observations: dict):
     # Launch calibration
     if config.general.compute_snowmelt:
@@ -52,7 +52,7 @@ def make_calibration(config: Config, catchment_name: str,
 
 
 def calibrate(config: Config, data_for_calibration: Dict,
-              hydro_model: BaseHydroModel, pet_model: PETModel, sar_model: SARModel):
+              hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: SARModel):
     # Parameters boundaries
     # Notes: The parameters are cast in an array.
     # Each hydrological model has its own number of parameters, thus the array.

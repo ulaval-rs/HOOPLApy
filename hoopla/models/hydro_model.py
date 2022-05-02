@@ -8,7 +8,7 @@ from spotpy.parameter import Uniform
 
 from hoopla.calibration.util import find_non_winter_indexes
 from hoopla.config import Config
-from hoopla.pet_models import PETModel
+from hoopla.models.pet_model import BasePETModel
 
 
 class BaseHydroModel:
@@ -19,7 +19,7 @@ class BaseHydroModel:
         # Defining variables to be set
         self.config: Optional[Config] = None
         self.objective_function: Optional[Callable] = None
-        self.pet_model: Optional[PETModel] = None
+        self.pet_model: Optional[BasePETModel] = None
         self.params: list[Uniform] = []
         self.dates: Optional[Sequence] = None
         self.P: Optional[Sequence] = None
@@ -35,10 +35,11 @@ class BaseHydroModel:
               T: list[float],
               latitudes: list[float],
               observed_streamflow: list[float],
-              pet_model: PETModel,
+              pet_model: BasePETModel,
               initial_params: list[float],
               lower_boundaries_of_params: list[float],
               upper_boundaries_of_params: list[float]):
+        self.config = config
         self.objective_function = objective_function
         self.P = P
         self.dates = dates

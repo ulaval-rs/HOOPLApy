@@ -1,18 +1,24 @@
 from datetime import datetime
-from typing import Dict, List
 
 import numpy as np
 
-from hoopla.pet_models import PETModel
-from hoopla.pet_models.util import find_day_of_year
+from hoopla.models.pet_model import BasePETModel
+from hoopla.models.util import find_day_of_year
 
 GSC = 0.082  # (MJ / m2 / min)
 RHO = 1000  # (kg / L)
 
 
-class Oudin(PETModel):
+class PETModel(BasePETModel):
+    """Oudin model"""
 
-    def prepare(self, time_step: str, dates: List[datetime], T: List[float], latitudes: List[float]):
+    def inputs(self):
+        return ['dates', 'T']
+
+    def hyper_parameters(self):
+        return ['latitude']
+
+    def prepare(self, time_step: str, dates: list[datetime], T: list[float], latitude: float):
         """Prepare the PET simulation
 
         Parameters
@@ -23,13 +29,13 @@ class Oudin(PETModel):
             Dates of the data collection.
         T
             Daily mean temperature (Celsius).
-        latitudes
+        latitude
             Station latitude.
 
         Returns
         -------
         PET Data
-            Dictionary containing the following
+            dictionary containing the following
             Re: Extraterrestrial radiation (MJ/m2/time_step(ex. 3h))
             lambda_constant: Latent vaporization energy (MJ/kg)
             mean_air_temperature: Mean air temperature
@@ -42,7 +48,7 @@ class Oudin(PETModel):
         lambda_constant = 2.501 - 0.002361 * T  # (MJ / kg)
 
         # Computation
-        Lrad = (np.pi * latitudes) / 180  # (rad)
+        Lrad = (np.pi * latitude) / 180  # (rad)
         ds = 0.409 * np.sin((2 * np.pi / 365) * days_of_year - 1.39)  # (rad)
         dr = 1 + 0.033 * np.cos(days_of_year * 2 * np.pi / 365)  # no unit
         omega = np.arccos(-np.tan(Lrad) * np.tan(ds))  # (rad)
@@ -72,7 +78,7 @@ class Oudin(PETModel):
 
         return {'Re': Re, 'lambda_constant': lambda_constant, 'T': T}
 
-    def run(self, pet_data: Dict):
+    def run(self, pet_data: dict):
         """Computation of the potential evapotranspiration according to the Oudin formula
 
         Returns
