@@ -33,20 +33,19 @@ SCORES = {
 ORIENT_SCORES = [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1]
 
 
-def make_calibration(config: Config, catchment_name: str,
-                     hydro_model: BaseHydroModel, pet_model: BasePETModel,
-                     sar_model: SARModel, observations: dict):
+def make_calibration(observations: dict, config: Config,
+                     hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: SARModel):
     # Launch calibration
     if config.general.compute_snowmelt:
         if config.general.compute_warm_up:
             raise NotImplementedError
         else:
-            calibrate(config, data_obs, hydro_model, pet_model, sar_model)
+            calibrate(config, observations, hydro_model, pet_model, sar_model)
     else:
         if config.general.compute_warm_up:
             raise NotImplementedError
         else:
-            calibrate(config, data_obs, hydro_model, pet_model, sar_model)
+            calibrate(config, observations, hydro_model, pet_model, sar_model)
 
     raise NotImplementedError
 
@@ -95,9 +94,9 @@ def calibrate(config: Config, data_for_calibration: Dict,
             ]
 
     else:
-        initial_parameters = model_param_boundaries[hydro_model.name]['sIni']
-        lower_boundaries_of_parameters = model_param_boundaries[hydro_model.name]['sMin']
-        upper_boundaries_of_parameters = model_param_boundaries[hydro_model.name]['sMax']
+        initial_parameters = model_param_boundaries[hydro_model.name()]['sIni']
+        lower_boundaries_of_parameters = model_param_boundaries[hydro_model.name()]['sMin']
+        upper_boundaries_of_parameters = model_param_boundaries[hydro_model.name()]['sMax']
 
     # Scores for the objective function
     # ---------------------------------

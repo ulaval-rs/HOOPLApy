@@ -1,6 +1,5 @@
 import warnings
 from datetime import datetime, timedelta
-from typing import Dict
 
 import numpy as np
 
@@ -10,7 +9,7 @@ from hoopla.models.pet_model import BasePETModel
 from hoopla.sar_models import SARModel
 
 
-def crop_data(config: Config, observations: Dict,
+def crop_data(config: Config, observations: dict,
               hydro_model: BaseHydroModel, pet_model: BasePETModel,
               sar_model: SARModel, ini: str):
     # Cropable data

@@ -1,6 +1,6 @@
 import abc
 from datetime import datetime
-from typing import Callable, Dict, Iterable, Optional, Sequence
+from typing import Callable, Iterable, Optional, Sequence
 
 import numpy as np
 import spotpy
@@ -24,17 +24,17 @@ class BaseHydroModel:
         self.dates: Optional[Sequence] = None
         self.P: Optional[Sequence] = None
         self.T: Optional[Sequence] = None
-        self.latitudes: Optional[Sequence] = None
+        self.latitude: Optional[Sequence] = None
         self.observed_streamflow: Optional[Sequence] = None
 
     def setup(self,
               config: Config,
               objective_function: Callable,
               P: np.array,
-              dates: list[datetime],
-              T: list[float],
-              latitudes: list[float],
-              observed_streamflow: list[float],
+              dates: Sequence[datetime],
+              T: Sequence[float],
+              latitudes: float,
+              observed_streamflow: Sequence[float],
               pet_model: BasePETModel,
               initial_params: list[float],
               lower_boundaries_of_params: list[float],
@@ -44,7 +44,7 @@ class BaseHydroModel:
         self.P = P
         self.dates = dates
         self.T = T
-        self.latitudes = latitudes
+        self.latitude = latitudes
         self.observed_streamflow = observed_streamflow
         self.pet_model = pet_model
 
@@ -64,11 +64,15 @@ class BaseHydroModel:
         raise NotImplementedError
 
     @abc.abstractmethod
+    def name(self) -> str:
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def inputs(self) -> list[str]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def run(self, model_inputs: Dict, params: Iterable, state_variables: Dict):
+    def run(self, model_inputs: dict, params: Iterable, state_variables: dict):
         raise NotImplementedError
 
     def parameters(self):
@@ -87,13 +91,11 @@ class BaseHydroModel:
         state_variables = self.prepare(params)
 
         if self.config.general.compute_pet:
-            pet_data = self.pet_model.prepare(
+            pet_params = self.pet_model.prepare(
                 time_step=self.config.general.time_step,
-                dates=self.dates,
-                T=self.T,
-                latitudes=self.latitudes
+                model_inputs={'dates': self.dates, 'T': self.T, 'latitude': self.latitude}
             )
-            E = self.pet_model.run(pet_data)
+            E = self.pet_model.run(pet_params)
 
         # Container for results
         simulated_streamflow = []

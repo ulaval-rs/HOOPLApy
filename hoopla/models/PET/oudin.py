@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import numpy as np
 
 from hoopla.models.pet_model import BasePETModel
@@ -10,38 +8,54 @@ RHO = 1000  # (kg / L)
 
 
 class PETModel(BasePETModel):
-    """Oudin model"""
+    """Oudin model
 
-    def inputs(self):
+    Notes
+    -----
+    Reference : Which potential evapotranspiration input for a lumped
+        rainfall-runoff model? Part 2 - Towards a simple and efficient
+        potential evapotranspiration model for rainfall-runoff modelling,
+        Oudin et al., Journal of Hydrology, 2005, 290-306, 303
+
+    Coded by G. Seiller
+    Modified by A. Thiboult (2017)
+    Translated to Python by Gabriel Couture (2022)
+    """
+
+    def name(self) -> str:
+        return 'Oudin'
+
+    def inputs(self) -> list:
         return ['dates', 'T']
 
-    def hyper_parameters(self):
+    def hyper_parameters(self) -> list:
         return ['latitude']
 
-    def prepare(self, time_step: str, dates: list[datetime], T: list[float], latitude: float):
+    def prepare(self, time_step: str, model_inputs: dict, hyper_parameters: dict):
         """Prepare the PET simulation
 
         Parameters
         ----------
         time_step
             The time step (3h or 24h).
-        dates
-            Dates of the data collection.
-        T
-            Daily mean temperature (Celsius).
-        latitude
-            Station latitude.
+        model_inputs
+            Dictionary containing the following data.
+            dates (Sequence[datetime)): Sequence of the dates.
+            T (Sequence[float]): Sequence of the daily temperature (Celsius).
+        hyper_parameters
+            Dictionary containing the following data.
+            latitude (float): Station latitude.
 
         Returns
         -------
-        PET Data
+        PET params
             dictionary containing the following
             Re: Extraterrestrial radiation (MJ/m2/time_step(ex. 3h))
             lambda_constant: Latent vaporization energy (MJ/kg)
-            mean_air_temperature: Mean air temperature
-        DL
-            Maximum day light (h)
+            T: Mean air temperature
         """
+        dates, T = model_inputs['dates'], model_inputs['T']
+        latitude = hyper_parameters['latitude']
 
         days_of_year = np.array([find_day_of_year(date) for date in dates])
 
@@ -78,26 +92,27 @@ class PETModel(BasePETModel):
 
         return {'Re': Re, 'lambda_constant': lambda_constant, 'T': T}
 
-    def run(self, pet_data: dict):
+    def run(self, params: dict) -> np.ndarray:
         """Computation of the potential evapotranspiration according to the Oudin formula
+
+        Parameters
+        ----------
+        params
+            Dictionary containing the following
+            Re: Extraterrestrial radiation (MJ/m2/time_step(ex. 3h))
+            lambda_constant: Latent vaporization energy (MJ/kg)
+            T: Mean air temperature
 
         Returns
         -------
         float
-            Potential Evapotranspiration (mm/3h)
+            Potential Evapotranspiration (mm/time_step)
 
-        Notes
-        -----
-        Reference : Which potential evapotranspiration input for a lumped
-            rainfall-runoff model? Part 2 - Towards a simple and efficient
-            potential evapotranspiration model for rainfall-runoff modelling,
-            Oudin et al., Journal of Hydrology, 2005, 290-306, 303
-
-        Coded by G. Seiller
-        Modified by A. Thiboult (2017)
-        Translated to Python by Gabriel Couture (2022)
+        Returns
+        -------
+        Evapotranspiration array.
         """
-        Re, lambda_constant, T = pet_data['Re'], pet_data['lambda_constant'], pet_data['T']
+        Re, lambda_constant, T = params['Re'], params['lambda_constant'], params['T']
 
         E = Re / (lambda_constant * RHO) * (T + 5) / 100  # [m/j]
         E = E * 1000  # [mm/j]

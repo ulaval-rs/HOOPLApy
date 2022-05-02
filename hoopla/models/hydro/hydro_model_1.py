@@ -6,8 +6,24 @@ from hoopla.models.hydro_model import BaseHydroModel
 
 
 class HydroModel(BaseHydroModel):
+    """BUCKET hydrological model
 
-    def inputs(self):
+    FOLLOWING
+     - Thornthwaite, C.W., Mather, J.R., 1955. The water balance. Report.
+       (Drexel Institute of Climatology. United States)
+     - Perrin, C. (2000). Vers une amélioration d'un modèle global pluie-débit,
+       PhD Thesis, Appendix 1, p. 313-316. Retrieved from
+       https://tel.archives-ouvertes.fr/tel-00006216
+
+    Programmed by G. Seiller, Univ. Laval (05-2013)
+    Slightly modified by A. Thiboult (2016)
+    Translated to Python by Gabriel Couture (2022)
+    """
+
+    def name(self) -> str:
+        return 'HydroMod1'
+
+    def inputs(self) -> list:
         return ['P', 'E']
 
     def prepare(self, params: List[float]) -> Dict:
@@ -28,7 +44,6 @@ class HydroModel(BaseHydroModel):
         -------
         State variables
             Dictionary of the state variables
-
         """
         # Routing delay consideration
         drftc = np.ceil(params[3])
@@ -66,6 +81,8 @@ class HydroModel(BaseHydroModel):
             S: Soil reservoir state
             R: Root layer reservoir state
             T: Direct routing reservoir state
+            DL: Day light
+            HY:
 
         Returns
         -------

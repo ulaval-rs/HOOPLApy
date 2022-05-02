@@ -1,7 +1,8 @@
 import abc
+from datetime import datetime
 
 
-class BasePETModel:
+class BaseSARModel:
 
     def __init__(self):
         pass
@@ -19,9 +20,9 @@ class BasePETModel:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def prepare(self, time_step: str, model_inputs: dict, hyper_parameters: dict) -> dict:
+    def prepare(self, time_step: str, dates: list[datetime], T: list[float], latitude: float) -> dict:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def run(self, params: dict):
+    def run(self, pet_data: dict):
         raise NotImplementedError
