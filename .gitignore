@@ -1,4 +1,3 @@
-
  !.gitignore
  !LICENSE
  !poetry.lock
@@ -12,6 +11,9 @@
 
  !tests/
  !tests/**
+
+ !data/
+ !data/**
 
  !docs/
  !docs/**
