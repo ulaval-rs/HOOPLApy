@@ -1,15 +1,13 @@
-from typing import Dict
+import json
+import warnings
 
-from scipy.io import loadmat
 from spotpy import objectivefunctions
 
 from hoopla.calibration.sce_ua import shuffled_complex_evolution
-from hoopla.config import Config, DATA_PATH
-from hoopla.data import validation
+from hoopla.config import Config
 from hoopla.models.hydro_model import BaseHydroModel
 from hoopla.models.pet_model import BasePETModel
-from hoopla.sar_models.sar_model import SARModel
-from hoopla.util.croping import crop_data
+from hoopla.models.sar_model import BaseSARModel
 
 SCORES = {
     'RMSE': objectivefunctions.rmse,
@@ -30,73 +28,59 @@ SCORES = {
     'gKGE': NotImplemented,
     'KGEm': NotImplemented
 }
-ORIENT_SCORES = [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1]
 
 
 def make_calibration(observations: dict, config: Config,
-                     hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: SARModel):
-    # Launch calibration
+                     catchment: str, hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: BaseSARModel,
+                     model_param_boundaries: dict, sar_model_param_boundaries: dict):
     if config.general.compute_snowmelt:
         if config.general.compute_warm_up:
             raise NotImplementedError
         else:
-            calibrate(config, observations, hydro_model, pet_model, sar_model)
+            simulated_streamflow = calibrate(config, observations, hydro_model, pet_model, sar_model,
+                      model_param_boundaries, sar_model_param_boundaries)
     else:
         if config.general.compute_warm_up:
             raise NotImplementedError
         else:
-            calibrate(config, observations, hydro_model, pet_model, sar_model)
+            simulated_streamflow, best_params = calibrate(
+                config, observations, hydro_model, pet_model, sar_model,
+                model_param_boundaries, sar_model_param_boundaries)
 
-    raise NotImplementedError
+    # Save results
+    results = {
+        'hydro_model': hydro_model.name(),
+        'PET_model': pet_model.name(),
+        'SAR_model': sar_model.name(),
+        'Qsim': list(simulated_streamflow),
+        'best_parameters': best_params,
+    }
+    with open(f'C={catchment}-H={hydro_model.name()}-E={pet_model.name()}-S={sar_model.name()}.json', 'w') as file:
+        warnings.warn('Add more information when saving the calibration results file.')
+        json.dump(results, file, indent=4)
 
 
-def calibrate(config: Config, data_for_calibration: Dict,
-              hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: SARModel):
+def calibrate(config: Config, observations: dict,
+              hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: BaseSARModel,
+              model_param_boundaries: dict, sar_model_param_boundaries: dict):
     # Parameters boundaries
     # Notes: The parameters are cast in an array.
     # Each hydrological model has its own number of parameters, thus the array.
     # ---------------------
-    model_param_boundaries = loadmat(
-        file_name=f'{DATA_PATH}/{config.general.time_step}/Model_parameters/model_param_boundaries.mat',
-        simplify_cells=True
-    )
-    snow_model_param_boundaries = loadmat(
-        file_name=f'{DATA_PATH}/{config.general.time_step}/Model_parameters/snow_model_param_boundaries.mat',
-        simplify_cells=True
-    )
-
     if config.general.compute_snowmelt:
         if config.calibration.calibrate_snow:
-            initial_parameters = [
-                model_param_boundaries[hydro_model.name]['sIni'],
-                snow_model_param_boundaries[sar_model.name]['sIni']
-            ]
-            lower_boundaries_of_parameters = [
-                model_param_boundaries[hydro_model.name]['sMin'],
-                snow_model_param_boundaries[sar_model.name]['sMin']
-            ]
-            upper_boundaries_of_parameters = [
-                model_param_boundaries[hydro_model.name]['sMax'],
-                snow_model_param_boundaries[sar_model.name]['sMax']
-            ]
+            initial_parameters = [model_param_boundaries['sIni'], sar_model_param_boundaries['sIni']]
+            lower_boundaries_of_parameters = [model_param_boundaries['sMin'], sar_model_param_boundaries['sMin']]
+            upper_boundaries_of_parameters = [model_param_boundaries['sMax'], sar_model_param_boundaries['sMax']]
         else:
-            initial_parameters = [
-                model_param_boundaries[hydro_model.name]['sIni'],
-                snow_model_param_boundaries[sar_model.name]['default']
-            ]
-            lower_boundaries_of_parameters = [
-                model_param_boundaries[hydro_model.name]['sMin'],
-                snow_model_param_boundaries[sar_model.name]['default']
-            ]
-            upper_boundaries_of_parameters = [
-                model_param_boundaries[hydro_model.name]['sMax'],
-                snow_model_param_boundaries[sar_model.name]['default']
-            ]
+            initial_parameters = [model_param_boundaries['sIni'], sar_model_param_boundaries['default']]
+            lower_boundaries_of_parameters = [model_param_boundaries['sMin'], sar_model_param_boundaries['default']]
+            upper_boundaries_of_parameters = [model_param_boundaries['sMax'], sar_model_param_boundaries['default']]
 
     else:
-        initial_parameters = model_param_boundaries[hydro_model.name()]['sIni']
-        lower_boundaries_of_parameters = model_param_boundaries[hydro_model.name()]['sMin']
-        upper_boundaries_of_parameters = model_param_boundaries[hydro_model.name()]['sMax']
+        initial_parameters = model_param_boundaries['sIni']
+        lower_boundaries_of_parameters = model_param_boundaries['sMin']
+        upper_boundaries_of_parameters = model_param_boundaries['sMax']
 
     # Scores for the objective function
     # ---------------------------------
@@ -115,58 +99,21 @@ def calibrate(config: Config, data_for_calibration: Dict,
     elif config.calibration.method == 'SCE':
         best_parameters, best_f = shuffled_complex_evolution(
             hydro_model=hydro_model,
-            data_for_calibration=data_for_calibration,
+            data_for_calibration=observations,
             pet_model=pet_model,
             objective_function=objective_function,
             initial_parameters=initial_parameters,
             lower_boundaries_of_parameters=lower_boundaries_of_parameters,
             upper_boundaries_of_parameters=upper_boundaries_of_parameters,
             ngs=config.calibration.SCE['ngs'],
-            max_iteration=config.calibration.maxiter
+            max_iteration=config.calibration.maxiter,
+            config=config
         )
     else:
         raise ValueError(f'Calibration method "{config.calibration.method}" not known. '
                          'Calibration method should be "DDS" or "SCE"')
 
     # ReRun simulation with best parameters
-    # -------------------------------------
-    if config.general.compute_warm_up:
-        if config.general.compute_snowmelt:
-            raise NotImplementedError
-        else:
-            raise NotImplementedError
+    simulated_streamflow = hydro_model.simulation(best_parameters)
 
-    # Compute potential evapotranspiration
-    if config.general.compute_pet:
-        pet_data = pet_model.prepare(
-            time_step=config.general.time_step,
-            dates=data_for_calibration['Date'],
-            T=data_for_calibration['T'],
-            latitudes=data_for_calibration['Lat']
-        )
-        E = pet_model.run(pet_data)
-
-    # Snow accounting model initialization
-    if config.general.compute_snowmelt:
-        raise NotImplementedError
-
-    # Hydrological model initialization
-    state_variables = hydro_model.prepare(best_parameters)
-
-    # Initialization of states with WarmUp
-    if config.general.compute_warm_up:
-        raise NotImplementedError
-
-    # Simulation with best param
-    simulated_streamflow = []
-
-    if config.general.compute_snowmelt:
-        raise NotImplementedError
-    else:
-        for i, _ in enumerate(data_for_calibration['Date']):
-            model_inputs = {'P': data_for_calibration['Pt'][i], 'E': E[i]}
-            Qsim, state_variables = hydro_model.run(model_inputs, best_parameters, state_variables)
-
-            simulated_streamflow.append(Qsim)
-
-    return simulated_streamflow
+    return simulated_streamflow, best_parameters

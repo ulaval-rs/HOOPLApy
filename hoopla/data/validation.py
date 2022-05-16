@@ -3,24 +3,8 @@ import warnings
 import numpy
 
 from hoopla.config import Config
-from hoopla.data.observations import Observations
 from hoopla.models.pet_model import BasePETModel
-from hoopla.sar_models import SARModel
-
-
-def check_data(config: Config, pet_model: BasePETModel,
-               sar_model: SARModel, observations: Observations,
-               data_meteo_forecast: dict, for_ini_forecast: bool = False):
-    if config.general.compute_pet:
-        potential_evapotranspiration(observations, pet_model)
-    elif 'E' not in observations:
-        raise ValueError('Hydrology:Data, Potential evapotranspiration not provided')
-
-    if config.general.compute_snowmelt:
-        snow_accounting_validation(observations, sar_model)
-
-    if for_ini_forecast:
-        meteorological_forecast_validation(config, data_meteo_forecast, sar_model)
+from hoopla.models.sar_model import BaseSARModel
 
 
 def general_validation(observation_dict: dict):
@@ -31,7 +15,7 @@ def general_validation(observation_dict: dict):
         raise ValueError('Hydrology:Data, Precipitations not provided')
 
 
-def calibration_validation(need_calibration: bool, observation_dict: dict):
+def validate_calibration(need_calibration: bool, observation_dict: dict):
     if need_calibration:
         if 'Q' not in observation_dict:
             raise ValueError('Q data not provided. No calibration possible')
@@ -42,7 +26,7 @@ def calibration_validation(need_calibration: bool, observation_dict: dict):
             observation_dict['Q'][:] = numpy.NaN
 
 
-def potential_evapotranspiration(data_obs: dict, pet_model: BasePETModel):
+def validate_potential_evapotranspiration(data_obs: dict, pet_model: BasePETModel):
     parameters = pet_model.inputs() + pet_model.hyper_parameters()
     if len(parameters) == 0:
         raise ValueError(f'PET:Data, data not provided for the {pet_model.name} PET model')
@@ -52,8 +36,8 @@ def potential_evapotranspiration(data_obs: dict, pet_model: BasePETModel):
         data_obs['E'][:] = numpy.NaN
 
 
-def snow_accounting_validation(data_obs: dict, sar_model: SARModel):
-    parameters = sar_model.inputs + sar_model.hyper_parameters
+def validate_snow_accounting(data_obs: dict, sar_model: BaseSARModel):
+    parameters = sar_model.inputs() + sar_model.hyper_parameters()
     if len(parameters) == 0:
         raise ValueError(f'SAR:Data, data not provided for the {sar_model.name} SAR model')
 
@@ -74,7 +58,7 @@ def snow_accounting_validation(data_obs: dict, sar_model: SARModel):
         data_obs['Tmax'][:] = numpy.NaN
 
 
-def meteorological_forecast_validation(config: Config, data_meteo_forecast: dict, sar_model: SARModel):
+def validate_meteorological_forecast(config: Config, data_meteo_forecast: dict, sar_model: BaseSARModel):
     if config.forecast.perfect_forecast == 0:
         if config.forecast.meteo_ens:
             raise NotImplemented(

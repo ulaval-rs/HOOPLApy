@@ -6,12 +6,11 @@ import numpy as np
 from hoopla.config import Config
 from hoopla.models.hydro_model import BaseHydroModel
 from hoopla.models.pet_model import BasePETModel
-from hoopla.sar_models import SARModel
+from hoopla.models.sar_model import BaseSARModel
 
 
 def crop_data(config: Config, observations: dict,
-              hydro_model: BaseHydroModel, pet_model: BasePETModel,
-              sar_model: SARModel, ini: str):
+              hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: BaseSARModel, ini: str):
     # Cropable data
     hydro_variables = hydro_model.inputs()
     pet_variables = pet_model.inputs() if config.general.compute_pet else []

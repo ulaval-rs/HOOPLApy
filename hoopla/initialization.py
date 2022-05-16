@@ -18,6 +18,9 @@ def list_catchments(time_step: str) -> List[str]:
     List[str]
         List of catchment names.
     """
-    catchments = scipy.io.loadmat(f'{DATA_PATH}/{time_step}/Misc/catchment_names.mat')
+    catchments = scipy.io.loadmat(
+        f'{DATA_PATH}/{time_step}/Misc/catchment_names.mat',
+        simplify_cells=True
+    )
 
-    return [i[0][0] for i in catchments['nameC']]
+    return catchments['nameC'] if isinstance(catchments['nameC'], list) else [catchments['nameC']]

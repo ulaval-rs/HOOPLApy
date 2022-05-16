@@ -20,7 +20,7 @@ class BaseHydroModel:
         self.config: Optional[Config] = None
         self.objective_function: Optional[Callable] = None
         self.pet_model: Optional[BasePETModel] = None
-        self.params: list[Uniform] = []
+        self.params: Sequence[Uniform] = []
         self.dates: Optional[Sequence] = None
         self.P: Optional[Sequence] = None
         self.T: Optional[Sequence] = None
@@ -36,9 +36,9 @@ class BaseHydroModel:
               latitudes: float,
               observed_streamflow: Sequence[float],
               pet_model: BasePETModel,
-              initial_params: list[float],
-              lower_boundaries_of_params: list[float],
-              upper_boundaries_of_params: list[float]):
+              initial_params: Sequence[float],
+              lower_boundaries_of_params: Sequence[float],
+              upper_boundaries_of_params: Sequence[float]):
         self.config = config
         self.objective_function = objective_function
         self.P = P
@@ -93,7 +93,8 @@ class BaseHydroModel:
         if self.config.general.compute_pet:
             pet_params = self.pet_model.prepare(
                 time_step=self.config.general.time_step,
-                model_inputs={'dates': self.dates, 'T': self.T, 'latitude': self.latitude}
+                model_inputs={'dates': self.dates, 'T': self.T},
+                hyper_parameters={'latitude': self.latitude}
             )
             E = self.pet_model.run(pet_params)
 

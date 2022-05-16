@@ -3,6 +3,7 @@ from typing import Callable, Dict
 import numpy as np
 import spotpy
 
+from hoopla.config import Config
 from hoopla.models.hydro_model import BaseHydroModel
 from hoopla.models.pet_model import BasePETModel
 
@@ -16,14 +17,16 @@ def shuffled_complex_evolution(
         lower_boundaries_of_parameters: np.array,
         upper_boundaries_of_parameters: np.array,
         ngs: int,
-        max_iteration: int):
+        max_iteration: int,
+        config: Config):
     hydro_model.setup(
+        config=config,
         objective_function=objective_function,
         pet_model=pet_model,
-        P=data_for_calibration['Pt'],
-        dates=data_for_calibration['Date'],
+        P=data_for_calibration['P'],
+        dates=data_for_calibration['dates'],
         T=data_for_calibration['T'],
-        latitudes=data_for_calibration['Lat'],
+        latitudes=data_for_calibration['latitude'],
         observed_streamflow=data_for_calibration['Q'],
         initial_params=initial_parameters,
         lower_boundaries_of_params=lower_boundaries_of_parameters,

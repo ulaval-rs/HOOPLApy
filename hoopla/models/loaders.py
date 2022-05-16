@@ -88,9 +88,9 @@ def list_sar_models() -> dict[str, BaseSARModel]:
 
 
 def _load_module_form_path(path: str) -> ModuleType:
-    spec = importlib.util.spec_from_file_location('_module_imported_from_path', path)
+    spec = importlib.util.spec_from_file_location('_module', path)
     module = importlib.util.module_from_spec(spec)
-    sys.modules['_module_imported_from_path'] = module
+    sys.modules['_module'] = module
     spec.loader.exec_module(module)
 
     return module
