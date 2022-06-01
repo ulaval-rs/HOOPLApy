@@ -36,9 +36,7 @@ class BaseHydroModel:
               latitudes: float,
               observed_streamflow: Sequence[float],
               pet_model: BasePETModel,
-              initial_params: Sequence[float],
-              lower_boundaries_of_params: Sequence[float],
-              upper_boundaries_of_params: Sequence[float]):
+              model_parameters: Sequence[spotpy.parameter.Base]):
         self.config = config
         self.objective_function = objective_function
         self.P = P
@@ -47,16 +45,7 @@ class BaseHydroModel:
         self.latitude = latitudes
         self.observed_streamflow = observed_streamflow
         self.pet_model = pet_model
-
-        for i in range(len(initial_params)):
-            self.params.append(
-                Uniform(
-                    optguess=initial_params[i],
-                    low=lower_boundaries_of_params[i],
-                    high=upper_boundaries_of_params[i],
-                )
-            )
-
+        self.params = model_parameters
         self.ready = True
 
     @abc.abstractmethod

@@ -43,16 +43,20 @@ data_meteo_forecast = data.load_forecast_data(
     sar_model=sar_model
 )
 
-model_param_boundaries = data.load_model_params_boundaries(
+model_parameters = data.load_model_parameters(
     filepath=f'{DATA_PATH}/{config.general.time_step}/Model_parameters/model_param_boundaries.mat',
     model_name=hydro_model.name(),
     file_format='mat',
 )
-sar_model_param_boundaries = data.load_sar_model_params_boundaries(
-    filepath=f'{DATA_PATH}/{config.general.time_step}/Model_parameters/snow_model_param_boundaries.mat',
-    model_name=sar_model.name(),
-    file_format='mat',
-)
+if config.general.compute_snowmelt:
+    sar_model_parameters = data.load_sar_model_parameters(
+        filepath=f'{DATA_PATH}/{config.general.time_step}/Model_parameters/snow_model_param_boundaries.mat',
+        model_name=sar_model.name(),
+        file_format='mat',
+        calibrate_snow=config.calibration.calibrate_snow
+    )
+else:
+    sar_model_parameters = []
 
 # Crop observed data according to specified dates and warm up
 crop_data(config, observations, hydro_model, pet_model, sar_model, ini='ini_calibration')
@@ -65,6 +69,6 @@ make_calibration(
     hydro_model=hydro_model,
     pet_model=pet_model,
     sar_model=sar_model,
-    model_param_boundaries=model_param_boundaries,
-    sar_model_param_boundaries=sar_model_param_boundaries
+    model_parameters=model_parameters,
+    sar_model_parameters=sar_model_parameters
 )

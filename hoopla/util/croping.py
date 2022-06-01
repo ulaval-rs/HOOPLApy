@@ -14,7 +14,7 @@ def crop_data(config: Config, observations: dict,
     # Cropable data
     hydro_variables = hydro_model.inputs()
     pet_variables = pet_model.inputs() if config.general.compute_pet else []
-    sar_variables = sar_model.inputs if config.general.compute_snowmelt else []
+    sar_variables = sar_model.inputs() if config.general.compute_snowmelt else []
 
     cropable_data_obs = {'dates', 'Q', *hydro_variables, *pet_variables, *sar_variables}
     cropable_data_forecast = {'Pt', 'T', 'Tmax', 'Tmin'}

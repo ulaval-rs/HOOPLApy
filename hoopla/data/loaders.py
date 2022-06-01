@@ -1,7 +1,7 @@
-import warnings
 from datetime import datetime
 
 import numpy as np
+import spotpy.parameter
 from scipy.io import loadmat
 
 from hoopla.config import Config
@@ -26,12 +26,12 @@ def load_observations(path: str, file_format: str, config: Config, pet_model: Ba
         raise ValueError(f'"{file_format}" file_format not supported/not found.')
 
     # Validations
-    validation.general_validation(observation_dict)
-    validation.validate_calibration(config.operations.calibration, observation_dict)
+    observation_dict = validation.general_validation(observation_dict)
+    observation_dict = validation.validate_calibration(config.operations.calibration, observation_dict)
     if config.general.compute_pet:
-        validation.validate_potential_evapotranspiration(observation_dict, pet_model)
+        observation_dict = validation.validate_potential_evapotranspiration(observation_dict, pet_model)
     if config.general.compute_snowmelt:
-        validation.validate_snow_accounting(observation_dict, sar_model)
+        observation_dict = validation.validate_snow_accounting(observation_dict, sar_model)
 
     return observation_dict
 
@@ -43,30 +43,73 @@ def load_forecast_data(filepath: str, file_format: str, config: Config, sar_mode
     else:
         raise ValueError(f'"{file_format}" file_format not supported/not found.')
 
-    validation.validate_meteorological_forecast(config, forecast_data, sar_model)
+    forecast_data = validation.validate_meteorological_forecast(config, forecast_data, sar_model)
 
     return forecast_data
 
 
-def load_model_params_boundaries(filepath: str, model_name: str, file_format: str):
+def load_model_parameters(filepath: str, model_name: str, file_format: str) -> list[spotpy.parameter.Base]:
+    """The models boundaries correspond to the initial value and the min and max values of each model parameters."""
     if file_format == 'mat':
         param_boundaries = loadmat(file_name=filepath, simplify_cells=True)
+
+        try:
+            param_boundaries = param_boundaries[model_name]
+        except KeyError:
+            raise ValueError(f'Model {model_name} not found in data')
+
+        if 'sIni' not in param_boundaries and 'sMin' not in param_boundaries and 'sMax' not in param_boundaries:
+            raise ValueError('params_boundaries should contain the following keys ("sIni", "sMin", "sMax")')
+
+        parameters = []
+        for i in range(len(param_boundaries['sIni'])):
+            parameters.append(
+                # Write now the default distribution is the Uniform one. Could be changed.
+                spotpy.parameter.Uniform(
+                    optguess=param_boundaries['sIni'][i],
+                    low=param_boundaries['sMin'][i],
+                    high=param_boundaries['sMax'][i]
+                )
+            )
 
     else:
         raise ValueError(f'"{file_format}" file_format not supported/not found.')
 
-    warnings.warn('Model params boundaries data are not validated')
-
-    return param_boundaries[model_name]
+    return parameters
 
 
-def load_sar_model_params_boundaries(filepath: str, model_name: str, file_format: str):
+def load_sar_model_parameters(
+        filepath: str, model_name: str, file_format: str,
+        calibrate_snow: bool) -> list[spotpy.parameter.Base]:
     if file_format == 'mat':
         param_boundaries = loadmat(file_name=filepath, simplify_cells=True)
+
+        try:
+            param_boundaries = param_boundaries[model_name]
+        except KeyError:
+            raise ValueError(f'Model {model_name} not found in data')
+
+        if ('sIni' not in param_boundaries and 'sMin' not in param_boundaries and 'sMax' not in param_boundaries) or\
+                'default' not in param_boundaries:
+            raise ValueError('params_boundaries should contain the following keys ("sIni", "sMin", "sMax") or "default"')
+
+        parameters = []
+        for i in range(len(param_boundaries['sIni'])):
+            if calibrate_snow:
+                parameters.append(
+                    # Write now the default distribution is the Uniform one. Could be changed.
+                    spotpy.parameter.Uniform(
+                        optguess=param_boundaries['sIni'][i],
+                        low=param_boundaries['sMin'][i],
+                        high=param_boundaries['sMax'][i]
+                    )
+                )
+            else:
+                parameters.append(
+                    spotpy.parameter.Constant(param_boundaries['default'][i])
+                )
 
     else:
         raise ValueError(f'"{file_format}" file_format not supported/not found.')
 
-    warnings.warn('SAR model params boundaries data are not validated')
-
-    return param_boundaries[model_name]
+    return parameters

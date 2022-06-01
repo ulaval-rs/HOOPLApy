@@ -1,6 +1,7 @@
 import json
 import warnings
 
+import spotpy.parameter
 from spotpy import objectivefunctions
 
 from hoopla.calibration.sce_ua import shuffled_complex_evolution
@@ -32,20 +33,25 @@ SCORES = {
 
 def make_calibration(observations: dict, config: Config,
                      catchment: str, hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: BaseSARModel,
-                     model_param_boundaries: dict, sar_model_param_boundaries: dict):
+                     model_parameters: list[spotpy.parameter.Base], sar_model_parameters: list[spotpy.parameter.Base]):
     if config.general.compute_snowmelt:
         if config.general.compute_warm_up:
             raise NotImplementedError
         else:
-            simulated_streamflow = calibrate(config, observations, hydro_model, pet_model, sar_model,
-                      model_param_boundaries, sar_model_param_boundaries)
+            simulated_streamflow = calibrate(
+                config, observations,
+                hydro_model, pet_model, sar_model,
+                model_parameters, sar_model_parameters
+            )
     else:
         if config.general.compute_warm_up:
             raise NotImplementedError
         else:
             simulated_streamflow, best_params = calibrate(
-                config, observations, hydro_model, pet_model, sar_model,
-                model_param_boundaries, sar_model_param_boundaries)
+                config, observations,
+                hydro_model, pet_model, sar_model,
+                model_parameters, sar_model_parameters
+            )
 
     # Save results
     results = {
@@ -62,26 +68,7 @@ def make_calibration(observations: dict, config: Config,
 
 def calibrate(config: Config, observations: dict,
               hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: BaseSARModel,
-              model_param_boundaries: dict, sar_model_param_boundaries: dict):
-    # Parameters boundaries
-    # Notes: The parameters are cast in an array.
-    # Each hydrological model has its own number of parameters, thus the array.
-    # ---------------------
-    if config.general.compute_snowmelt:
-        if config.calibration.calibrate_snow:
-            initial_parameters = [model_param_boundaries['sIni'], sar_model_param_boundaries['sIni']]
-            lower_boundaries_of_parameters = [model_param_boundaries['sMin'], sar_model_param_boundaries['sMin']]
-            upper_boundaries_of_parameters = [model_param_boundaries['sMax'], sar_model_param_boundaries['sMax']]
-        else:
-            initial_parameters = [model_param_boundaries['sIni'], sar_model_param_boundaries['default']]
-            lower_boundaries_of_parameters = [model_param_boundaries['sMin'], sar_model_param_boundaries['default']]
-            upper_boundaries_of_parameters = [model_param_boundaries['sMax'], sar_model_param_boundaries['default']]
-
-    else:
-        initial_parameters = model_param_boundaries['sIni']
-        lower_boundaries_of_parameters = model_param_boundaries['sMin']
-        upper_boundaries_of_parameters = model_param_boundaries['sMax']
-
+              model_parameters: list[spotpy.parameter.Base], sar_model_parameters: list[spotpy.parameter.Base]):
     # Scores for the objective function
     # ---------------------------------
     if config.calibration.score not in SCORES:
@@ -102,9 +89,7 @@ def calibrate(config: Config, observations: dict,
             data_for_calibration=observations,
             pet_model=pet_model,
             objective_function=objective_function,
-            initial_parameters=initial_parameters,
-            lower_boundaries_of_parameters=lower_boundaries_of_parameters,
-            upper_boundaries_of_parameters=upper_boundaries_of_parameters,
+            model_parameters=model_parameters,
             ngs=config.calibration.SCE['ngs'],
             max_iteration=config.calibration.maxiter,
             config=config

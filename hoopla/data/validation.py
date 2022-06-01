@@ -7,15 +7,17 @@ from hoopla.models.pet_model import BasePETModel
 from hoopla.models.sar_model import BaseSARModel
 
 
-def general_validation(observation_dict: dict):
+def general_validation(observation_dict: dict) -> dict:
     if 'dates' not in observation_dict:
         raise ValueError('Hydrology:Data, Dates not provided')
 
     if 'P' not in observation_dict:
         raise ValueError('Hydrology:Data, Precipitations not provided')
 
+    return observation_dict
 
-def validate_calibration(need_calibration: bool, observation_dict: dict):
+
+def validate_calibration(need_calibration: bool, observation_dict: dict) -> dict:
     if need_calibration:
         if 'Q' not in observation_dict:
             raise ValueError('Q data not provided. No calibration possible')
@@ -25,8 +27,10 @@ def validate_calibration(need_calibration: bool, observation_dict: dict):
             observation_dict['Q'] = numpy.empty(len(observation_dict['dates']))
             observation_dict['Q'][:] = numpy.NaN
 
+    return observation_dict
 
-def validate_potential_evapotranspiration(data_obs: dict, pet_model: BasePETModel):
+
+def validate_potential_evapotranspiration(data_obs: dict, pet_model: BasePETModel) -> dict:
     parameters = pet_model.inputs() + pet_model.hyper_parameters()
     if len(parameters) == 0:
         raise ValueError(f'PET:Data, data not provided for the {pet_model.name} PET model')
@@ -35,8 +39,10 @@ def validate_potential_evapotranspiration(data_obs: dict, pet_model: BasePETMode
         data_obs['E'] = numpy.empty(len(data_obs['dates']))
         data_obs['E'][:] = numpy.NaN
 
+    return data_obs
 
-def validate_snow_accounting(data_obs: dict, sar_model: BaseSARModel):
+
+def validate_snow_accounting(data_obs: dict, sar_model: BaseSARModel) -> dict:
     parameters = sar_model.inputs() + sar_model.hyper_parameters()
     if len(parameters) == 0:
         raise ValueError(f'SAR:Data, data not provided for the {sar_model.name} SAR model')
@@ -57,8 +63,10 @@ def validate_snow_accounting(data_obs: dict, sar_model: BaseSARModel):
         data_obs['Tmax'] = numpy.empty(len(data_obs['Date']))
         data_obs['Tmax'][:] = numpy.NaN
 
+    return data_obs
 
-def validate_meteorological_forecast(config: Config, data_meteo_forecast: dict, sar_model: BaseSARModel):
+
+def validate_meteorological_forecast(config: Config, data_meteo_forecast: dict, sar_model: BaseSARModel) -> dict:
     if config.forecast.perfect_forecast == 0:
         if config.forecast.meteo_ens:
             raise NotImplemented(

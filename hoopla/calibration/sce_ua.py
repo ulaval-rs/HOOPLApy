@@ -1,7 +1,7 @@
 from typing import Callable, Dict
 
 import numpy as np
-import spotpy
+import spotpy.parameter
 
 from hoopla.config import Config
 from hoopla.models.hydro_model import BaseHydroModel
@@ -13,9 +13,7 @@ def shuffled_complex_evolution(
         data_for_calibration: Dict,
         pet_model: BasePETModel,
         objective_function: Callable,
-        initial_parameters: np.array,
-        lower_boundaries_of_parameters: np.array,
-        upper_boundaries_of_parameters: np.array,
+        model_parameters: list[spotpy.parameter.Base],
         ngs: int,
         max_iteration: int,
         config: Config):
@@ -28,9 +26,7 @@ def shuffled_complex_evolution(
         T=data_for_calibration['T'],
         latitudes=data_for_calibration['latitude'],
         observed_streamflow=data_for_calibration['Q'],
-        initial_params=initial_parameters,
-        lower_boundaries_of_params=lower_boundaries_of_parameters,
-        upper_boundaries_of_params=upper_boundaries_of_parameters
+        model_parameters=model_parameters
     )
 
     sampler = spotpy.algorithms.sceua(hydro_model, dbname='sceua-data', dbformat='csv')
