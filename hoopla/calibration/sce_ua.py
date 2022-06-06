@@ -1,4 +1,4 @@
-from typing import Callable, Dict
+from typing import Callable, Dict, Sequence
 
 import numpy as np
 import spotpy.parameter
@@ -13,10 +13,10 @@ def shuffled_complex_evolution(
         data_for_calibration: Dict,
         pet_model: BasePETModel,
         objective_function: Callable,
-        model_parameters: list[spotpy.parameter.Base],
+        model_parameters: Sequence[spotpy.parameter.Base],
         ngs: int,
         max_iteration: int,
-        config: Config):
+        config: Config) -> tuple[Sequence[float], float]:
     hydro_model.setup(
         config=config,
         objective_function=objective_function,

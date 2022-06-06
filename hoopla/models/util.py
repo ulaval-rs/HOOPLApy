@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Sequence
 
 
 def find_day_of_year(date: datetime) -> int:
@@ -6,3 +7,9 @@ def find_day_of_year(date: datetime) -> int:
     date_interval = date - datetime(year=date.year, month=1, day=1)
 
     return date_interval.days + 1
+
+
+def find_non_winter_indexes(dates: Sequence[datetime]):
+    JAN, FEB, MARS = 1, 2, 3
+
+    return [i for i, date in enumerate(dates) if date.month not in (JAN, FEB, MARS)]

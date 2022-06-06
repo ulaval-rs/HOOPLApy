@@ -1,6 +1,8 @@
 import json
 import warnings
+from typing import Sequence
 
+import numpy as np
 import spotpy.parameter
 from spotpy import objectivefunctions
 
@@ -33,27 +35,24 @@ SCORES = {
 
 def make_calibration(observations: dict, config: Config,
                      catchment: str, hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: BaseSARModel,
-                     model_parameters: list[spotpy.parameter.Base], sar_model_parameters: list[spotpy.parameter.Base]):
-    if config.general.compute_snowmelt:
-        if config.general.compute_warm_up:
-            raise NotImplementedError
-        else:
-            simulated_streamflow = calibrate(
-                config, observations,
-                hydro_model, pet_model, sar_model,
-                model_parameters, sar_model_parameters
-            )
+                     model_parameters: Sequence[spotpy.parameter.Base],
+                     sar_model_parameters: Sequence[spotpy.parameter.Base]) -> None:
+
+    if config.general.compute_warm_up:
+        raise NotImplementedError
     else:
-        if config.general.compute_warm_up:
-            raise NotImplementedError
-        else:
-            simulated_streamflow, best_params = calibrate(
-                config, observations,
-                hydro_model, pet_model, sar_model,
-                model_parameters, sar_model_parameters
-            )
+        simulated_streamflow, best_params, sar_results = calibrate(
+            config=config,
+            observations=observations,
+            hydro_model=hydro_model,
+            pet_model=pet_model,
+            sar_model=sar_model,
+            model_parameters=model_parameters,
+            sar_model_parameters=sar_model_parameters,
+        )
 
     # Save results
+    # ------------
     results = {
         'hydro_model': hydro_model.name(),
         'PET_model': pet_model.name(),
@@ -66,9 +65,13 @@ def make_calibration(observations: dict, config: Config,
         json.dump(results, file, indent=4)
 
 
-def calibrate(config: Config, observations: dict,
-              hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: BaseSARModel,
-              model_parameters: list[spotpy.parameter.Base], sar_model_parameters: list[spotpy.parameter.Base]):
+def calibrate(config: Config,
+              observations: dict,
+              hydro_model: BaseHydroModel,
+              pet_model: BasePETModel,
+              sar_model: BaseSARModel,
+              model_parameters: Sequence[spotpy.parameter.Base],
+              sar_model_parameters: Sequence[spotpy.parameter.Base]) -> tuple[np.ndarray, Sequence[float], dict]:
     # Scores for the objective function
     # ---------------------------------
     if config.calibration.score not in SCORES:
@@ -99,6 +102,9 @@ def calibrate(config: Config, observations: dict,
                          'Calibration method should be "DDS" or "SCE"')
 
     # ReRun simulation with best parameters
-    simulated_streamflow = hydro_model.simulation(best_parameters)
+    if config.general.compute_snowmelt:
+        raise NotImplementedError
+    else:
+        simulated_streamflow = hydro_model.simulation(best_parameters)
 
-    return simulated_streamflow, best_parameters
+        return simulated_streamflow, best_parameters, {}

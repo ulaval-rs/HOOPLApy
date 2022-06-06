@@ -36,7 +36,7 @@ def load_observations(path: str, file_format: str, config: Config, pet_model: Ba
     return observation_dict
 
 
-def load_forecast_data(filepath: str, file_format: str, config: Config, sar_model: BaseSARModel):
+def load_forecast_data(filepath: str, file_format: str, config: Config, sar_model: BaseSARModel) -> dict:
     if file_format == 'mat':
         forecast_data = loadmat(file_name=filepath, simplify_cells=True)
 

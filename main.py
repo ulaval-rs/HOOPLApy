@@ -3,6 +3,7 @@ from hoopla import data, models
 from hoopla.calibration.calibration import make_calibration
 from hoopla.config import DATA_PATH
 from hoopla.initialization import list_catchments
+from hoopla.simulation import make_simulation
 from hoopla.util.croping import crop_data
 
 config = hoopla.load_config('./config.toml')
@@ -36,7 +37,7 @@ observations = data.load_observations(
 )
 
 # Load meteo forecast data
-data_meteo_forecast = data.load_forecast_data(
+forecast_data = data.load_forecast_data(
     filepath=f'{DATA_PATH}/{config.general.time_step}/Det_met_fcast/Met_fcast_{catchment_name}.mat',
     file_format='mat',
     config=config,
@@ -71,4 +72,14 @@ make_calibration(
     sar_model=sar_model,
     model_parameters=model_parameters,
     sar_model_parameters=sar_model_parameters
+)
+
+make_simulation(
+    observations=observations,
+    config=config,
+    hydro_model=hydro_model,
+    pet_model=pet_model,
+    sar_model=sar_model,
+    parameters=None,
+    forecast_data=forecast_data,
 )

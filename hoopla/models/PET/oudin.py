@@ -31,7 +31,7 @@ class PETModel(BasePETModel):
     def hyper_parameters(self) -> list:
         return ['latitude']
 
-    def prepare(self, time_step: str, model_inputs: dict, hyper_parameters: dict):
+    def prepare(self, time_step: str, model_inputs: dict, hyper_parameters: dict) -> dict:
         """Prepare the PET simulation
 
         Parameters

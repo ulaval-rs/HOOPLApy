@@ -6,7 +6,7 @@ import numpy as np
 import spotpy
 from spotpy.parameter import Uniform
 
-from hoopla.calibration.util import find_non_winter_indexes
+from hoopla.models.util import find_non_winter_indexes
 from hoopla.config import Config
 from hoopla.models.pet_model import BasePETModel
 
@@ -49,7 +49,7 @@ class BaseHydroModel:
         self.ready = True
 
     @abc.abstractmethod
-    def prepare(self, params: list[float]):
+    def prepare(self, params: Sequence[float]):
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -70,7 +70,7 @@ class BaseHydroModel:
     def evaluation(self):
         return self.observed_streamflow
 
-    def simulation(self, params: list[float]):
+    def simulation(self, params: Sequence[float]) -> np.ndarray:
         if not self.ready:
             raise Exception('Model should be "setup()" to be used.')
 
