@@ -1,24 +1,24 @@
- *
+*
 
- !.gitignore
- !LICENSE
- !poetry.lock
- !pyproject.toml
+!.gitignore
+!LICENSE
+!poetry.lock
+!pyproject.toml
 
- !main.py
- !config.toml
+!main.py
+!config.toml
 
- !hoopla/
- !hoopla/**
+!hoopla/
+!hoopla/**
 
- !tests/
- !tests/**
+!tests/
+!tests/**
 
- !data/
- !data/**
+!data/
+!data/**
 
- !docs/
- !docs/**
+!docs/
+!docs/**
 
 __pycache__/
 *.py[cod]
