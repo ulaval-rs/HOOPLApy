@@ -87,10 +87,8 @@ class BaseHydroModel:
             )
             E = self.pet_model.run(pet_params)
 
-        # Container for results
-        simulated_streamflow = []
-
         # Running simulation
+        simulated_streamflow = []  # Container for results
         if self.config.general.compute_snowmelt:
             raise NotImplementedError
         else:

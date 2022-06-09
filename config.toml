@@ -26,7 +26,7 @@ parallel_compute = false # Parallel computing
 
 [calibration]
 export         = true  # Export calibrated parameters to ./Data for future Simulat/Forecastce calibration is performed
-calibrate_snow = true # Calibrate snow module (if 0, default values are used)
+calibrate_snow = false # Calibrate snow module (if 0, default values are used)
 method         = 'SCE' # Choose between 'DDS' and 'SCE'
 remove_winter  = true  # Remove the Quebec "ice months" (dec, jan, fev, mar)
 score          = 'RMSE' # Performance criteron (RMSE, MSE, NSE, etc. Enter "help det_score" in terminal to see all available scores)

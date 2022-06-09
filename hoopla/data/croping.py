@@ -10,7 +10,8 @@ from hoopla.models.sar_model import BaseSARModel
 
 
 def crop_data(config: Config, observations: dict,
-              hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: BaseSARModel, ini: str):
+              hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: BaseSARModel,
+              ini: str):
     # Cropable data
     hydro_variables = hydro_model.inputs()
     pet_variables = pet_model.inputs() if config.general.compute_pet else []
