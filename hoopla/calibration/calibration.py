@@ -1,4 +1,5 @@
 import json
+import os
 import warnings
 from typing import Sequence
 
@@ -60,7 +61,10 @@ def make_calibration(observations: dict, config: Config,
         'Qsim': list(simulated_streamflow),
         'best_parameters': best_params,
     }
-    with open(f'C={catchment}-H={hydro_model.name()}-E={pet_model.name()}-S={sar_model.name()}.json', 'w') as file:
+    if not os.path.exists('./results'):
+        os.makedirs('./results')
+
+    with open(f'./results/C={catchment}-H={hydro_model.name()}-E={pet_model.name()}-S={sar_model.name()}.json', 'w') as file:
         warnings.warn('Add more information when saving the calibration results file.')
         json.dump(results, file, indent=4)
 
