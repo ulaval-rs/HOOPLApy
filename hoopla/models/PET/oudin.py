@@ -70,7 +70,7 @@ class PETModel(BasePETModel):
         if time_step == '3h':
             b = 2. * np.pi * (days_of_year - 81) / 364  # component of the seasonal correction.
             Sc = 0.1645 * np.sin(2 * b) - 0.1255 * np.cos(b) - 0.025 * np.sin(b)  # seasonal correction
-            t = dates[:, 4] + 0.5  # standard clock time at the midpoint of the period[hour]
+            t = np.array([d.hour + 0.5 for d in dates])  # standard clock time at the midpoint of the period [hour]
             Lz = 75  # longitude of the centre of the local time zone[degrees west of Greenwich]
             Lm = 72.0  # longitude of the measurement site[degrees west of Greenwich]
             omega0 = np.pi / 12. * (t + 0.06667 * (Lz - Lm) + Sc - 12)  # solar time angle at midpoint of the period
