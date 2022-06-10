@@ -10,6 +10,6 @@ def find_day_of_year(date: datetime) -> int:
 
 
 def find_non_winter_indexes(dates: Sequence[datetime]):
-    JAN, FEB, MARS = 1, 2, 3
+    JAN, FEB, MARS, DEC = 1, 2, 3, 12
 
-    return [i for i, date in enumerate(dates) if date.month not in (JAN, FEB, MARS)]
+    return [i for i, date in enumerate(dates) if date.month not in (JAN, FEB, MARS, DEC)]
