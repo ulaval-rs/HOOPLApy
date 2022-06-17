@@ -1,8 +1,6 @@
-from datetime import datetime
-from typing import Sequence
+import calendar
 
 import numpy as np
-import spotpy
 from spotpy.parameter import ParameterSet
 
 from hoopla.models.sar_model import BaseSARModel
@@ -103,4 +101,61 @@ class SARModel(BaseSARModel):
         Converted to Python by Gabriel Couture (2022)
 
         """
+        # Inputs
+        date = model_inputs['Date']
+        P = model_inputs['P']
+        T = model_inputs['T']
+        Tmin = model_inputs['Tmin']
+        Tmax = model_inputs['Tmax']
+
+        # Parameters
+        CTg, Kf = params[-2], params[-1]
+
+        # Variables
+        G = state_variables['G']
+        eTg = state_variables['eTg']
+        Zz = state_variables['Zz']
+        ZmedBV = state_variables['ZmedBV']
+        Beta = state_variables['Beta']
+        gradT = state_variables['gradT']
+        Tf = state_variables['Tf']
+        QNBV = state_variables['QNBV']
+        Vmin = state_variables['Vmin']
+
+        # Number of elevation bands
+        nbzalt = 5
+
+        # If it is a leap year, julian days after the 29/02 are shifted by one day for gradT
+        day_of_year = date.timetuple().tm_yday
+        if calendar.isleap(date.year) and day_of_year > 59:
+            day_of_year -= 1
+        theta = gradT[day_of_year+1]
+
+        # Effective temperature
+        Tz = T + theta * (Zz - ZmedBV) / 100
+        Tzmax = Tmax + theta * (Zz - ZmedBV) / 100
+        Tzmin = Tmin + theta * (Zz - ZmedBV) / 100
+        Pdis = P / nbzalt  # Distribution of precipitation over the nbzalt bands
+        modc = np.exp(Beta * (Zz - ZmedBV))
+        c = np.sum(modc) / nbzalt
+        Pz = (1 / c) * Pdis * np.exp(Beta * (Zz - ZmedBV))
+
+        # Snow fraction
+        fracneige = np.zeros(nbzalt)
+        for i in range(nbzalt):
+            if Zz[i] < 1500 and not (np.isnan(Tzmin).any() or np.isnan(Tzmax).any()):
+                if Tzmax[i] <= 0:
+                    fracneige[i] = 1
+                elif Tzmin[i] >= 0:
+                    fracneige[i] = 0
+                else:
+                    fracneige[i] = 1 - Tzmax[i] / (Tzmax[i] - Tzmin[i])
+            else:  # USGS function (USGS is chosen if Tmax and Tmin are not defined)
+                if Tz[i] > 3:
+                    fracneige[i] = 0
+                elif Tz[i] < -1:
+                    fracneige[i] = 1
+                else:
+                    fracneige[i] = 1 - (Tz[i] + 1) / (3 + 1)
+
         raise NotImplementedError
