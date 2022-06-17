@@ -30,7 +30,7 @@ def shuffled_complex_evolution(
     )
 
     sampler = spotpy.algorithms.sceua(hydro_model, dbname='sceua-data', dbformat='csv')
-    sampler.sample(repetitions=max_iteration, ngs=ngs)
+    sampler.sample(repetitions=max_iteration, ngs=ngs, kstop=10, pcento=1e-4)
 
     results = spotpy.analyser.load_csv_results('sceua-data')
     max_index = np.argmin(results['like1'])

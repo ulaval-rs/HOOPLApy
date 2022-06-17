@@ -109,4 +109,4 @@ class BaseHydroModel:
             evaluation = evaluation.take(non_winter_indexes)
             simulation = simulation.take(non_winter_indexes)
 
-        return self.objective_function(evaluation, simulation)
+        return abs(self.objective_function(evaluation, simulation))

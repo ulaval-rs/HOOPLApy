@@ -46,10 +46,10 @@ class HydroModel(BaseHydroModel):
             Dictionary of the state variables
         """
         # Routing delay consideration
-        drftc = np.ceil(params[3])
-        k = np.linspace(0, drftc).T
+        drftc = int(np.ceil(params[3]))
+        k = np.arange(0, drftc + 1).T  # Making an array of int from 0 to drftc [0, 1, 2, ..., drftc]
 
-        DL = np.zeros(k.shape)  # A zeros matrix of the size of k
+        DL = 0 * k  # A zeros matrix of the size of k
         DL[-2] = 1 / (params[3] - k[-2] + 1)
         DL[-1] = 1 - DL[-2]
         HY = 0 * DL  # A zeros matrix of the size of DL
@@ -100,7 +100,7 @@ class HydroModel(BaseHydroModel):
         S, R, T = state_variables['S'], state_variables['R'], state_variables['T']
         DL, HY = state_variables['DL'], state_variables['HY']
 
-        Ps = (1 - params[5]) * P
+        Ps = (1 - params[4]) * P
         Pr = P - Ps
 
         # Soil moisture accounting(S)

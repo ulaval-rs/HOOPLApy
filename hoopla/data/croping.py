@@ -41,7 +41,8 @@ def crop_data(config: Config, observations: dict,
 
     ## Get indices of the dates of interest
     dates = observations['dates']
-    select = np.isin(dates, np.arange(date_begin, date_end, timedelta(hours=time_step / 24)).astype(datetime))
+    time_delta = timedelta(hours=time_step / 24)
+    select = np.isin(dates, np.arange(date_begin, date_end, time_delta).astype(datetime))
 
     ## Dates warm up
     date_begin_warm_up = date_begin - timedelta(hours=time_step) / 3 * 365
