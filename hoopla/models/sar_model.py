@@ -1,5 +1,9 @@
 import abc
 from datetime import datetime
+from typing import Sequence
+
+import spotpy
+from spotpy.parameter import ParameterSet
 
 
 class BaseSARModel:
@@ -20,9 +24,9 @@ class BaseSARModel:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def prepare(self, time_step: str, dates: list[datetime], T: list[float], latitude: float) -> dict:
+    def prepare(self, params: ParameterSet, hyper_parameters: dict) -> dict:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def run(self, pet_data: dict):
+    def run(self, model_inputs: dict, params: ParameterSet, state_variables: dict):
         raise NotImplementedError

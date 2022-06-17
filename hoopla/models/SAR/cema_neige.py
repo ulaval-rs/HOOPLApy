@@ -1,6 +1,9 @@
 from datetime import datetime
+from typing import Sequence
 
 import numpy as np
+import spotpy
+from spotpy.parameter import ParameterSet
 
 from hoopla.models.sar_model import BaseSARModel
 
@@ -17,41 +20,38 @@ class SARModel(BaseSARModel):
     def hyper_parameters(self) -> list:
         return ['Beta', 'gradT', 'T, Zz5']
 
-    def prepare(self, dates: list[datetime], params: list, hyper_parameters: dict) -> dict:
+    def prepare(self, params: ParameterSet, hyper_parameters: dict) -> dict:
         """Setup state variables
 
         Parameters
         ----------
-        dates
         params
+            Useless in the CemaNeige model. This parameter exists in the BaseSARModel
+            in case a Snow model needs the parameters for the initialization.
         hyper_parameters
 
         Returns
         -------
-        sar_parameters
-
+        SAR state variables
         """
-        # Cemaneige Parameters
         return {
-            'CTg': params[-2],
-            'Kf': params[-1],
-            'G': np.zeros(1, 5),
-            'eTg': np.zeros(1, 5),
+            'G': np.zeros(5),
+            'eTg': np.zeros(5),
             'Zz': hyper_parameters['Zz5'],
             'ZmedBV': hyper_parameters['Zz5'][2],
             'Beta': hyper_parameters['Beta'],
             'gradT': hyper_parameters['gradT'],
             'Tf': 0,
-            'QNBV': hyper_parameters['QNVB'],
+            'QNBV': hyper_parameters['QNBV'],
             'Vmin': hyper_parameters['Vmin'],
         }
 
-    def run(self, inputs: dict, params: dict):
+    def run(self, model_inputs: dict, params: ParameterSet, state_variables: dict):
         """Snow accounting routine. Compute accumulation and snow melt.
 
         Parameters
         ----------
-        inputs
+        model_inputs
             Dict of the model inputs
             P (float): total precipitation (solid + liquid)
             T (float): mean temperature (°C)
@@ -59,9 +59,11 @@ class SARModel(BaseSARModel):
             Tmin (float) = min temperature (°C)
             Date (datetime): (1x6 matrix)
         params
-            Dict of the SAR Parameters
-            CTg: snow cover thermal coefficient (calibrated paramter)
-            Kf: snowmelt factor (mm/°C) (calibrated paramter)
+            Set of the model parameters. The SAR model uses the last parameters
+            0. CTg: snow cover thermal coefficient (calibrated paramter)
+            1. Kf: snowmelt factor (mm/°C) (calibrated paramter)
+        state_variables
+            Dictionary of the following state variables:
             G: snow stock
             eTg: snow cover thermal state
             Zz: catchment elevation quantiles (m)

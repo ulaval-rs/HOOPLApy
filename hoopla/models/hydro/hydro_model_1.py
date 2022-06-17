@@ -1,6 +1,7 @@
-from typing import Dict, List, Sequence, Tuple
+from typing import Dict, Sequence, Tuple
 
 import numpy as np
+from spotpy.parameter import ParameterSet
 
 from hoopla.models.hydro_model import BaseHydroModel
 
@@ -26,13 +27,13 @@ class HydroModel(BaseHydroModel):
     def inputs(self) -> list:
         return ['P', 'E']
 
-    def prepare(self, params: List[float]) -> Dict:
+    def prepare(self, params: ParameterSet) -> Dict:
         """Setup state variables
 
         Parameters
         ----------
         params
-            List of the model parameters, in that order:
+            Set of the model parameters, in that order:
             0. Soil reservoir capacity
             1. Soil reservoir overflow dissociation constant R
             2. Routing reservoir emptying constant
@@ -59,7 +60,7 @@ class HydroModel(BaseHydroModel):
 
         return {'S': S, 'R': R, 'T': T, 'DL': DL, 'HY': HY}
 
-    def run(self, model_inputs: Dict, params: Sequence, state_variables: Dict) -> Tuple[np.array, Dict]:
+    def run(self, model_inputs: Dict, params: ParameterSet, state_variables: Dict) -> Tuple[np.array, Dict]:
         """The model logic
 
         Parameters
@@ -69,7 +70,7 @@ class HydroModel(BaseHydroModel):
             P (float): Mean areal rainfall (mm)
             E (float): Mean areal evapotranspiration (mm)
         params
-            List of the model parameters, in that order:
+            Set of the model parameters, in that order:
             0. Soil reservoir capacity
             1. Soil reservoir overflow dissociation constant R
             2. Routing reservoir emptying constant

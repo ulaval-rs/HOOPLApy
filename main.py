@@ -57,8 +57,8 @@ if config.general.compute_snowmelt:
         file_format='mat',
         calibrate_snow=config.calibration.calibrate_snow
     )
-else:
-    sar_model_parameters = []
+    # Add the SAR model's parameters at the end of the parameters to calibrate
+    model_parameters += sar_model_parameters
 
 
 # Calibration
@@ -78,7 +78,6 @@ if config.operations.calibration:
         pet_model=pet_model,
         sar_model=sar_model,
         model_parameters=model_parameters,
-        sar_model_parameters=sar_model_parameters
     )
 
 # Simulation

@@ -36,8 +36,7 @@ SCORES = {
 
 def make_calibration(observations: dict, config: Config,
                      catchment: str, hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: BaseSARModel,
-                     model_parameters: Sequence[spotpy.parameter.Base],
-                     sar_model_parameters: Sequence[spotpy.parameter.Base]) -> None:
+                     model_parameters: Sequence[spotpy.parameter.Base]) -> None:
 
     if config.general.compute_warm_up:
         raise NotImplementedError
@@ -49,7 +48,6 @@ def make_calibration(observations: dict, config: Config,
             pet_model=pet_model,
             sar_model=sar_model,
             model_parameters=model_parameters,
-            sar_model_parameters=sar_model_parameters,
         )
 
     # Save results
@@ -74,8 +72,7 @@ def calibrate(config: Config,
               hydro_model: BaseHydroModel,
               pet_model: BasePETModel,
               sar_model: BaseSARModel,
-              model_parameters: Sequence[spotpy.parameter.Base],
-              sar_model_parameters: Sequence[spotpy.parameter.Base]) -> tuple[np.ndarray, Sequence[float], dict]:
+              model_parameters: Sequence[spotpy.parameter.Base]) -> tuple[np.ndarray, Sequence[float], dict]:
     # Scores for the objective function
     # ---------------------------------
     if config.calibration.score not in SCORES:
@@ -93,8 +90,9 @@ def calibrate(config: Config,
     elif config.calibration.method == 'SCE':
         best_parameters, best_f = shuffled_complex_evolution(
             hydro_model=hydro_model,
-            data_for_calibration=observations,
+            observations=observations,
             pet_model=pet_model,
+            sar_model=sar_model,
             objective_function=objective_function,
             model_parameters=model_parameters,
             ngs=config.calibration.SCE['ngs'],

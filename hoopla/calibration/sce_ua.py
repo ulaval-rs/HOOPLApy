@@ -6,27 +6,29 @@ import spotpy.parameter
 from hoopla.config import Config
 from hoopla.models.hydro_model import BaseHydroModel
 from hoopla.models.pet_model import BasePETModel
+from hoopla.models.sar_model import BaseSARModel
 
 
 def shuffled_complex_evolution(
         hydro_model: BaseHydroModel,
-        data_for_calibration: Dict,
+        observations: Dict,
         pet_model: BasePETModel,
+        sar_model: BaseSARModel,
         objective_function: Callable,
         model_parameters: Sequence[spotpy.parameter.Base],
         ngs: int,
         max_iteration: int,
         config: Config) -> tuple[Sequence[float], float]:
+
+    # Setup the hydro model with the correct data
     hydro_model.setup(
         config=config,
         objective_function=objective_function,
+        observations=observations,
+        observed_streamflow=observations['Q'],
         pet_model=pet_model,
-        P=data_for_calibration['P'],
-        dates=data_for_calibration['dates'],
-        T=data_for_calibration['T'],
-        latitudes=data_for_calibration['latitude'],
-        observed_streamflow=data_for_calibration['Q'],
-        model_parameters=model_parameters
+        sar_model=sar_model,
+        model_parameters=model_parameters,
     )
 
     sampler = spotpy.algorithms.sceua(hydro_model, dbname='sceua-data', dbformat='csv')
