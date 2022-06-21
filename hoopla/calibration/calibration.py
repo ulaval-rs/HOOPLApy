@@ -37,11 +37,10 @@ SCORES = {
 def make_calibration(observations: dict, config: Config,
                      catchment: str, hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: BaseSARModel,
                      model_parameters: Sequence[spotpy.parameter.Base]) -> None:
-
     if config.general.compute_warm_up:
         raise NotImplementedError
     else:
-        simulated_streamflow, best_params, sar_results = calibrate(
+        simulated_streamflow, best_params = calibrate(
             config=config,
             observations=observations,
             hydro_model=hydro_model,
@@ -72,7 +71,28 @@ def calibrate(config: Config,
               hydro_model: BaseHydroModel,
               pet_model: BasePETModel,
               sar_model: BaseSARModel,
-              model_parameters: Sequence[spotpy.parameter.Base]) -> tuple[np.ndarray, Sequence[float], dict]:
+              model_parameters: Sequence[spotpy.parameter.Base]) -> tuple[np.ndarray, Sequence[float]]:
+    """
+
+    Parameters
+    ----------
+    config
+        Configuration.
+    observations
+        Dictionary of the observed data (the needed data for the calibration).
+    hydro_model
+    pet_model
+    sar_model
+    model_parameters
+
+    Returns
+    -------
+    simulated_streamflow, best_params
+
+    Notes
+    -----
+    Now, the SAR results are not exported.
+    """
     # Scores for the objective function
     # ---------------------------------
     if config.calibration.score not in SCORES:
@@ -104,9 +124,6 @@ def calibrate(config: Config,
                          'Calibration method should be "DDS" or "SCE"')
 
     # ReRun simulation with best parameters
-    if config.general.compute_snowmelt:
-        raise NotImplementedError
-    else:
-        simulated_streamflow = hydro_model.simulation(best_parameters)
+    simulated_streamflow = hydro_model.simulation(best_parameters)
 
-        return simulated_streamflow, best_parameters, {}
+    return simulated_streamflow, best_parameters

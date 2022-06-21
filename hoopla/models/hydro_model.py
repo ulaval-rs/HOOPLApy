@@ -1,6 +1,6 @@
 import abc
 from datetime import datetime
-from typing import Callable, Iterable, Optional, Sequence
+from typing import Callable, Iterable, Optional, Sequence, Union
 
 import numpy as np
 import spotpy
@@ -67,7 +67,7 @@ class BaseHydroModel:
     def evaluation(self):
         return self.observed_streamflow
 
-    def simulation(self, params: ParameterSet) -> np.ndarray:
+    def simulation(self, params: Union[ParameterSet, Sequence[float]]) -> np.ndarray:
         if not self.ready:
             raise Exception('Model should be "setup()" to be used.')
 

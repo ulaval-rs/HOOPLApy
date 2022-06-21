@@ -80,6 +80,7 @@ if config.operations.calibration:
         model_parameters=model_parameters,
     )
 
+exit()
 # Simulation
 # ----------
 if config.operations.simulation:
