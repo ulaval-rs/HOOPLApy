@@ -60,7 +60,7 @@ class HydroModel(BaseHydroModel):
 
         return {'S': S, 'R': R, 'T': T, 'DL': DL, 'HY': HY}
 
-    def run(self, model_inputs: Dict, params: ParameterSet, state_variables: Dict) -> Tuple[np.array, Dict]:
+    def run(self, model_inputs: Dict, params: ParameterSet, state_variables: Dict) -> Tuple[float, Dict]:
         """The model logic
 
         Parameters

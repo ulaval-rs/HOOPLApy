@@ -1,4 +1,5 @@
 import calendar
+from typing import Tuple
 
 import numpy as np
 from spotpy.parameter import ParameterSet
@@ -44,7 +45,7 @@ class SARModel(BaseSARModel):
             'Vmin': hyper_parameters['Vmin'],
         }
 
-    def run(self, model_inputs: dict, params: ParameterSet, state_variables: dict):
+    def run(self, model_inputs: dict, params: ParameterSet, state_variables: dict) -> Tuple[float, dict]:
         """Snow accounting routine. Compute accumulation and snow melt.
 
         Parameters
@@ -74,13 +75,7 @@ class SARModel(BaseSARModel):
 
         Returns
         -------
-        TODO
-            runoffD = depth of runoff
-            CemaParm = see input above
-            Pg
-            Pl = liquid precipitation
-            snowMelt = snow melt
-
+        Depth of runoff, State variables
 
         Notes
         -----
