@@ -107,7 +107,7 @@ class BaseHydroModel:
                     state_variables=sar_state_variables
                 )
                 Qsim, state_variables = self.run(
-                    model_inputs={'P': runoff_d[i], 'E': E[i]},
+                    model_inputs={'P': runoff_d, 'E': E[i]},
                     params=params,
                     state_variables=state_variables
                 )

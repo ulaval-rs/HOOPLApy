@@ -129,7 +129,7 @@ class SARModel(BaseSARModel):
         day_of_year = date.timetuple().tm_yday
         if calendar.isleap(date.year) and day_of_year > 59:
             day_of_year -= 1
-        theta = gradT[day_of_year+1]
+        theta = gradT[day_of_year-1]
 
         # Effective temperature
         Tz = T + theta * (Zz - ZmedBV) / 100
@@ -158,4 +158,40 @@ class SARModel(BaseSARModel):
                 else:
                     fracneige[i] = 1 - (Tz[i] + 1) / (3 + 1)
 
-        raise NotImplementedError
+        fracneige = np.clip(fracneige, a_min=0.0, a_max=1.0)
+
+        # Dispatching according to precipitation type
+        Pg = Pz * fracneige
+        Pl = Pz - Pg
+
+        # Snow pack updating
+        G = G + Pg
+
+        # Snow pack thermal state
+        eTg = CTg * eTg + (1 - CTg) * Tz
+        eTg = np.clip(eTg, a_max=0.0, a_min=None)
+
+        # Melting factor according to snowpack thermal state
+        fTg = eTg >= Tf
+
+        # Potential of the area covered in snow
+        Fpot = (Tz > 0) * np.minimum(G, Kf * (Tz - Tf) * fTg)
+        
+        # Ratio of the area covered by snow
+        Gthreshold = QNBV * 0.9
+        fnts = np.clip(G / Gthreshold, a_max=1, a_min=None)
+
+        # Effective melting
+        snow_melt = Fpot * ((1 - Vmin) * fnts + Vmin)
+
+        # Update of snow stock
+        G = G - snow_melt
+
+        # Depth total of runoff (sent to the hydrological model)
+        runoff_d = np.sum(Pl) + np.sum(snow_melt)
+
+        # Updating state variables
+        state_variables['G'] = G
+        state_variables['eTg'] = eTg
+
+        return runoff_d, state_variables
