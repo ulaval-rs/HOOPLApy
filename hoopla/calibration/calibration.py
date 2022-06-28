@@ -34,20 +34,18 @@ SCORES = {
 }
 
 
-def make_calibration(observations: dict, config: Config,
+def make_calibration(config: Config, observations: dict, observations_for_warm_up: dict,
                      catchment: str, hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: BaseSARModel,
                      model_parameters: Sequence[spotpy.parameter.Base]) -> None:
-    if config.general.compute_warm_up:
-        raise NotImplementedError
-    else:
-        simulated_streamflow, best_params = calibrate(
+    simulated_streamflow, best_params = calibrate(
             config=config,
             observations=observations,
+            observations_for_warmup=observations_for_warm_up,
             hydro_model=hydro_model,
             pet_model=pet_model,
             sar_model=sar_model,
             model_parameters=model_parameters,
-        )
+    )
 
     # Save results
     # ------------
@@ -68,6 +66,7 @@ def make_calibration(observations: dict, config: Config,
 
 def calibrate(config: Config,
               observations: dict,
+              observations_for_warmup: dict,
               hydro_model: BaseHydroModel,
               pet_model: BasePETModel,
               sar_model: BaseSARModel,
@@ -80,6 +79,8 @@ def calibrate(config: Config,
         Configuration.
     observations
         Dictionary of the observed data (the needed data for the calibration).
+    observations_for_warmup
+        Dictionary of the observed data used by the warmup.
     hydro_model
     pet_model
     sar_model
@@ -105,19 +106,24 @@ def calibrate(config: Config,
     # Calibration
     # This aims to find the best parameters
     # ---------------------
+    # Setup the hydro model with the correct data
+    hydro_model.setup_for_calibration(
+        config=config,
+        objective_function=objective_function,
+        observations=observations,
+        observations_for_warmup=observations_for_warmup,
+        observed_streamflow=observations['Q'],
+        pet_model=pet_model,
+        sar_model=sar_model,
+        model_parameters=model_parameters,
+    )
     if config.calibration.method == 'DDS':
         raise NotImplementedError
     elif config.calibration.method == 'SCE':
         best_parameters, best_f = shuffled_complex_evolution(
             hydro_model=hydro_model,
-            observations=observations,
-            pet_model=pet_model,
-            sar_model=sar_model,
-            objective_function=objective_function,
-            model_parameters=model_parameters,
             ngs=config.calibration.SCE['ngs'],
             max_iteration=config.calibration.maxiter,
-            config=config
         )
     else:
         raise ValueError(f'Calibration method "{config.calibration.method}" not known. '

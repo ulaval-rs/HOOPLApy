@@ -48,12 +48,12 @@ class HydroModel(BaseHydroModel):
         """
         # Routing delay consideration
         drftc = int(np.ceil(params[3]))
-        k = np.arange(0, drftc + 1).T  # Making an array of int from 0 to drftc [0, 1, 2, ..., drftc]
+        k = np.arange(0, drftc + 1)  # Making an array of int from 0 to drftc [0, 1, 2, ..., drftc]
 
-        DL = 0 * k  # A zeros matrix of the size of k
+        DL = np.zeros(k.shape)  # A zeros matrix of the size of k
         DL[-2] = 1 / (params[3] - k[-2] + 1)
         DL[-1] = 1 - DL[-2]
-        HY = 0 * DL  # A zeros matrix of the size of DL
+        HY = np.zeros(DL.shape)  # A zeros matrix of the size of DL
 
         # Initialization of the reservoir states
         S, R, T = params[0] * 0.5, 10, 5

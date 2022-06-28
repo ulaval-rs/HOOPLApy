@@ -41,7 +41,6 @@ class General:
     compute_warm_up: bool
     export_light: bool
     overwrite: bool
-    parallel_compute: bool
 
 
 @dataclass

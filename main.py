@@ -66,12 +66,20 @@ if config.general.compute_snowmelt:
 if config.operations.calibration:
     # Crop observed data according to specified dates and warm up
     print('Removing unused data ...')
-    data.crop_data(config, observations, hydro_model, pet_model, sar_model, ini='ini_calibration')
+    observations, observations_for_forecast, observations_for_warm_up = data.crop_data(
+        config=config,
+        observations=observations,
+        hydro_model=hydro_model,
+        pet_model=pet_model,
+        sar_model=sar_model,
+        ini_type='ini_calibration'
+    )
 
     # Calibration
     print('Starting calibration ...')
     make_calibration(
         observations=observations,
+        observations_for_warm_up=observations_for_warm_up,
         config=config,
         catchment=catchment_name,
         hydro_model=hydro_model,

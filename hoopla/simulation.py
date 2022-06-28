@@ -29,6 +29,6 @@ def simulate(config: Config,
     if config.data.do_data_assimilation:
         raise NotImplementedError
     else:
-        hydro_model.setup()
+        hydro_model.setup_for_calibration()
 
     raise NotImplementedError
