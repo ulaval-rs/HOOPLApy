@@ -7,7 +7,7 @@ import numpy as np
 import spotpy.parameter
 from spotpy import objectivefunctions
 
-from hoopla.calibration.sce_ua import shuffled_complex_evolution
+from hoopla.calibration.optimization import shuffled_complex_evolution, dds
 from hoopla.config import Config
 from hoopla.models.hydro_model import BaseHydroModel
 from hoopla.models.pet_model import BasePETModel
@@ -118,12 +118,15 @@ def calibrate(config: Config,
         model_parameters=model_parameters,
     )
     if config.calibration.method == 'DDS':
-        raise NotImplementedError
+        best_parameters, best_f = dds(
+            hydro_model=hydro_model,
+            max_iteration=config.calibration.maxiter
+        )
     elif config.calibration.method == 'SCE':
         best_parameters, best_f = shuffled_complex_evolution(
             hydro_model=hydro_model,
             ngs=config.calibration.SCE['ngs'],
-            max_iteration=config.calibration.maxiter,
+            max_iteration=config.calibration.maxiter
         )
     else:
         raise ValueError(f'Calibration method "{config.calibration.method}" not known. '
