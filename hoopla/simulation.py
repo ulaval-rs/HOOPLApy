@@ -7,10 +7,19 @@ from hoopla.models.sar_model import BaseSARModel
 def make_simulation(observations: dict, config: Config,
                     hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: BaseSARModel,
                     parameters: list[float], forecast_data: dict):
-    if config.general.compute_warm_up:
+    # Reservoirs to update
+    if config.data.do_data_assimilation:
         raise NotImplementedError
-    else:
-        TODO_result, best_params, sar_results = simulate()
+
+    # Run simulation
+    TODO_result, best_params, sar_results = simulate(
+        config=config,
+        hydro_model=hydro_model,
+        pet_model=pet_model,
+        sar_model=sar_model,
+        parameters=parameters,
+        forecast_data=forecast_data
+    )
 
 
 def simulate(config: Config,
@@ -22,7 +31,6 @@ def simulate(config: Config,
 
     # Reservoirs to update
     if config.data.do_data_assimilation:
-        # [DataSim, w] = ini_DA(Switches,DataSim);% Noisy inputs
         raise NotImplementedError
 
     # Simulation

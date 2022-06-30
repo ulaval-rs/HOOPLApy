@@ -35,8 +35,8 @@ SCORES = {
 
 
 def make_calibration(config: Config, observations: dict, observations_for_warm_up: dict,
-                     catchment: str, hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: BaseSARModel,
-                     model_parameters: Sequence[spotpy.parameter.Base]) -> None:
+                    hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: BaseSARModel,
+                     model_parameters: Sequence[spotpy.parameter.Base], filepath_results: str) -> None:
     simulated_streamflow, best_params = calibrate(
             config=config,
             observations=observations,
@@ -59,7 +59,7 @@ def make_calibration(config: Config, observations: dict, observations_for_warm_u
     if not os.path.exists('./results'):
         os.makedirs('./results')
 
-    with open(f'./results/C={catchment}-H={hydro_model.name()}-E={pet_model.name()}-S={sar_model.name()}.json', 'w') as file:
+    with open(filepath_results, 'w') as file:
         warnings.warn('Add more information when saving the calibration results file.')
         json.dump(results, file, indent=4)
 

@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 import numpy as np
@@ -113,3 +114,15 @@ def load_sar_model_parameters(
         raise ValueError(f'"{file_format}" file_format not supported/not found.')
 
     return parameters
+
+
+def load_calibrated_model_parameters(filepath: str, file_format: str = 'json') -> list[float]:
+    """The calibrated models parameters."""
+    if file_format == 'json':
+        with open(filepath) as file:
+            calibrated_params = json.load(file)['best_parameters']
+
+    else:
+        raise ValueError(f'"{file_format}" file_format not supported/not found.')
+
+    return calibrated_params

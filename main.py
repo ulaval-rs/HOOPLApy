@@ -44,26 +44,25 @@ forecast_data = data.load_forecast_data(
     sar_model=sar_model
 )
 
-model_parameters = data.load_model_parameters(
-    filepath=f'{DATA_PATH}/{config.general.time_step}/Model_parameters/model_param_boundaries.mat',
-    model_name=hydro_model.name(),
-    file_format='mat',
-)
-
-if config.general.compute_snowmelt:
-    sar_model_parameters = data.load_sar_model_parameters(
-        filepath=f'{DATA_PATH}/{config.general.time_step}/Model_parameters/snow_model_param_boundaries.mat',
-        model_name=sar_model.name(),
-        file_format='mat',
-        calibrate_snow=config.calibration.calibrate_snow
-    )
-    # Add the SAR model's parameters at the end of the parameters to calibrate
-    model_parameters += sar_model_parameters
-
-
 # Calibration
 # -----------
 if config.operations.calibration:
+    model_parameters = data.load_model_parameters(
+        filepath=f'{DATA_PATH}/{config.general.time_step}/Model_parameters/model_param_boundaries.mat',
+        model_name=hydro_model.name(),
+        file_format='mat',
+    )
+
+    if config.general.compute_snowmelt:
+        sar_model_parameters = data.load_sar_model_parameters(
+            filepath=f'{DATA_PATH}/{config.general.time_step}/Model_parameters/snow_model_param_boundaries.mat',
+            model_name=sar_model.name(),
+            file_format='mat',
+            calibrate_snow=config.calibration.calibrate_snow
+        )
+        # Add the SAR model's parameters at the end of the parameters to calibrate
+        model_parameters += sar_model_parameters
+
     # Crop observed data according to specified dates and warm up
     print('Removing unused data ...')
     observations, observations_for_forecast, observations_for_warm_up = data.crop_data(
@@ -75,34 +74,43 @@ if config.operations.calibration:
         ini_type='ini_calibration'
     )
 
-    # Calibration
     print('Starting calibration ...')
     make_calibration(
         observations=observations,
         observations_for_warm_up=observations_for_warm_up,
         config=config,
-        catchment=catchment_name,
         hydro_model=hydro_model,
         pet_model=pet_model,
         sar_model=sar_model,
         model_parameters=model_parameters,
+        filepath_results=f'./results/C={catchment_name}-H={hydro_model.name()}-E={pet_model.name()}-S={sar_model.name()}.json'
     )
 
-exit()
 # Simulation
 # ----------
 if config.operations.simulation:
-    raise NotImplementedError  # Load calibrated_parameters
+    calibrated_params = data.load_calibrated_model_parameters(
+        filepath=f'./results/C={catchment_name}-H={hydro_model.name()}-E={pet_model.name()}-S={sar_model.name()}.json'
+    )
 
     # Crop data for the simulation
-    crop_data(config, observations, hydro_model, pet_model, sar_model, ini='ini_simulation')
+    print('Removing unused data ...')
+    observations, observations_for_forecast, observations_for_warm_up = data.crop_data(
+        config=config,
+        observations=observations,
+        hydro_model=hydro_model,
+        pet_model=pet_model,
+        sar_model=sar_model,
+        ini_type='ini_simulation'
+    )
 
+    print('Starting simulation ...')
     make_simulation(
         observations=observations,
         config=config,
         hydro_model=hydro_model,
         pet_model=pet_model,
         sar_model=sar_model,
-        parameters=None,
+        parameters=calibrated_params,
         forecast_data=forecast_data,
     )
