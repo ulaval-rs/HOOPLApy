@@ -1,0 +1,55 @@
+# HOOPLApy config file
+
+[operations]
+calibration = false  # Run calibration
+simulation  = true  # Run simulation
+forecast    = false  # Run forecast
+
+[dates]
+#calibration.begin = 1997-01-01T03:00:00
+calibration.begin = 2005-01-01T03:00:00
+calibration.end   = 2007-01-10T00:00:00
+simulation.begin  = 2010-01-01T03:00:00
+simulation.end    = 2015-01-01T00:00:00
+forecast.begin    = 2015-04-15T03:00:00
+forecast.end      = 2016-07-01T00:00:00
+
+[general]
+verbose          = true  # Verbose. Display information about computing
+time_step        = '3h'  # Computation time step. Choose between '3h' and '24h'
+compute_pet      = true  # Compute PET
+compute_snowmelt = true  # Compute snowmelt
+compute_warm_up  = false  # Add warm up before modelling
+export_light     = true  # Export fewer data(/results) to save space
+overwrite        = true  # Overwrite existing files created by HOOPLA
+
+[calibration]
+export         = true  # Export calibrated parameters to ./Data for future Simulat/Forecastce calibration is performed
+calibrate_snow = false # Calibrate snow module (if 0, default values are used)
+method         = 'DDS' # Choose between 'DDS' and 'SCE'
+remove_winter  = true  # Remove the Quebec "ice months" (dec, jan, fev, mar)
+score          = 'RMSE' # Performance criteron (RMSE, MSE, NSE, etc.)
+maxiter        = 10   # Maximum number of iteration during calibration
+SCE.ngs        = 10     # Number of Complexes for the SCE optimization
+
+[forecast]
+issue_time       = 6     # Hour of the day for which a forecast is issued (can be several per day ex: [6 12 18 24])
+perfect_forecast = false # Use meteorological observations as meteorological forecast
+horizon          = 80    # Horizon of the forecast (in time steps)
+meteo_ens        = false # Use meteorological ensemble forecast
+
+[data]
+do_data_assimilation = true      # Perform data assimilation
+tech                 = 'EnKF' # Choose either 'EnKF' (Ensemble Kalman Filter), 'PF' (particle filter), or 'PertOnly' (perturbation of inputs only)
+Uc_Q                 = 0.1    # Discharge (standard deviation=10# * Qobs)
+Uc_Pt                = 0.5    # Rainfal (standard deviation=50# * Pt mm, reference:Liu et al 2012,Reichl 2002)
+Uc_temp_pet          = 2      # temperature for PET (std deg cel)
+Uc_temp_snow_melt    = 2      # temperature for snow melt(std in deg cel)
+Uc_temp_min          = 2      # min temperature for snow melt(std in degree cel)
+Uc_temp_max          = 2      # max temperature for snow melt(std in degree cel)
+Uc_E                 = 0.1    # PET (standard deviation=10# * E). Value used only if petCompute=0
+dt                   = 8      # delta t between two correction steps
+N                    = 50     # Ensemble size
+
+PF.resample_tech   = 'systematic_resampling' # resampling technique. Either 'multinomial_resampling' or 'systematic_resampling'
+PF.resample_thresh = inf                     # Particle effective ensemble size before resampling. Included in [0 N]. 0 = never resample, ..., N = resample at each time step
