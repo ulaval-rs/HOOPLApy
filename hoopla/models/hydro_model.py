@@ -31,14 +31,12 @@ class BaseHydroModel:
               observations: dict,
               observations_for_warmup: dict,
               pet_model: BasePETModel,
-              sar_model: BaseSARModel,
-              model_parameters: Sequence[spotpy.parameter.Base]):
+              sar_model: BaseSARModel):
         self.config = config
         self.observations = observations
         self.observations_for_warmup = observations_for_warmup
         self.pet_model = pet_model
         self.sar_model = sar_model
-        self.model_params = model_parameters
 
     def setup_for_calibration(
             self,
@@ -50,10 +48,12 @@ class BaseHydroModel:
             pet_model: BasePETModel,
             sar_model: BaseSARModel,
             model_parameters: Sequence[spotpy.parameter.Base]):
-        self.setup(config, observations, observations_for_warmup, pet_model, sar_model, model_parameters)
+        self.setup(config, observations, observations_for_warmup, pet_model, sar_model)
 
         self.objective_function = objective_function
         self.observed_streamflow = observed_streamflow
+
+        self.model_params = model_parameters
 
     @abc.abstractmethod
     def prepare(self, params: ParameterSet):
@@ -91,8 +91,7 @@ class BaseHydroModel:
 
             E = self.pet_model.run(pet_params)
         else:
-            E =  self.observations['E']
-
+            E = self.observations['E']
 
         # Init hydro model
         if self.config.general.compute_warm_up:

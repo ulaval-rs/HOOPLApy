@@ -34,9 +34,14 @@ SCORES = {
 }
 
 
-def make_calibration(config: Config, observations: dict, observations_for_warm_up: dict,
-                    hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: BaseSARModel,
-                     model_parameters: Sequence[spotpy.parameter.Base], filepath_results: str) -> None:
+def make_calibration(config: Config,
+                     observations: dict,
+                     observations_for_warm_up: dict,
+                     hydro_model: BaseHydroModel,
+                     pet_model: BasePETModel,
+                     sar_model: BaseSARModel,
+                     model_parameters: Sequence[spotpy.parameter.Base],
+                     filepath_results: str) -> None:
     simulated_streamflow, best_params = calibrate(
             config=config,
             observations=observations,
@@ -56,11 +61,9 @@ def make_calibration(config: Config, observations: dict, observations_for_warm_u
         'Qsim': list(simulated_streamflow),
         'best_parameters': best_params,
     }
-    if not os.path.exists('./results'):
-        os.makedirs('./results')
 
     with open(filepath_results, 'w') as file:
-        warnings.warn('Add more information when saving the calibration results file.')
+        warnings.warn('TODO: Add more information when saving the calibration results file.')
         json.dump(results, file, indent=4)
 
 
@@ -71,7 +74,7 @@ def calibrate(config: Config,
               pet_model: BasePETModel,
               sar_model: BaseSARModel,
               model_parameters: Sequence[spotpy.parameter.Base]) -> tuple[np.ndarray, Sequence[float]]:
-    """
+    """Calibrate
 
     Parameters
     ----------

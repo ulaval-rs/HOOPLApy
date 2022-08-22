@@ -44,6 +44,9 @@ forecast_data = data.load_forecast_data(
     sar_model=sar_model
 )
 
+calibration_file_results = f'./results/calibration-C={catchment_name}-H={hydro_model.name()}-E={pet_model.name()}-S={sar_model.name()}.json'
+simulation_file_results = f'./results/simulation-C={catchment_name}-H={hydro_model.name()}-E={pet_model.name()}-S={sar_model.name()}.json'
+
 # Calibration
 # -----------
 if config.operations.calibration:
@@ -83,14 +86,14 @@ if config.operations.calibration:
         pet_model=pet_model,
         sar_model=sar_model,
         model_parameters=model_parameters,
-        filepath_results=f'./results/C={catchment_name}-H={hydro_model.name()}-E={pet_model.name()}-S={sar_model.name()}.json'
+        filepath_results=calibration_file_results
     )
 
 # Simulation
 # ----------
 if config.operations.simulation:
     calibrated_params = data.load_calibrated_model_parameters(
-        filepath=f'./results/C={catchment_name}-H={hydro_model.name()}-E={pet_model.name()}-S={sar_model.name()}.json'
+        filepath=calibration_file_results
     )
 
     # Crop data for the simulation
@@ -107,10 +110,12 @@ if config.operations.simulation:
     print('Starting simulation ...')
     make_simulation(
         observations=observations,
+        observations_for_warm_up=observations_for_warm_up,
         config=config,
         hydro_model=hydro_model,
         pet_model=pet_model,
         sar_model=sar_model,
         parameters=calibrated_params,
         forecast_data=forecast_data,
+        filepath_results=simulation_file_results
     )
