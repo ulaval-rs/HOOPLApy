@@ -1,8 +1,10 @@
+import random
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict
+from typing import Any, Dict
 
 import toml
+import numpy as np
 
 DATA_PATH = './data'
 
@@ -41,6 +43,7 @@ class General:
     compute_warm_up: bool
     export_light: bool
     overwrite: bool
+    seed: Any
 
 
 @dataclass
@@ -68,10 +71,10 @@ class Data:
     tech: str
     Uc_Q: float
     Uc_Pt: float
-    Uc_temp_pet: float
-    Uc_temp_snow_melt: float
-    Uc_temp_min: float
-    Uc_temp_max: float
+    Uc_T_pet: float
+    Uc_T_snow_melt: float
+    Uc_T_min: float
+    Uc_T_max: float
     Uc_E: float
     dt: float
     N: int
@@ -99,4 +102,11 @@ class Config:
 def load_config(path: str) -> Config:
     configurations = toml.load(path)
 
-    return Config(**configurations)
+    config = Config(**configurations)
+
+    # Setting seeds
+    if config.general.seed != 'None':
+        random.seed(config.general.seed)
+        np.random.seed(config.general.seed)
+
+    return config
