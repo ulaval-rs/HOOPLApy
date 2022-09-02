@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 from types import ModuleType
 
+from hoopla.models.da_model import BaseDAModel
 from hoopla.models.hydro_model import BaseHydroModel
 from hoopla.models.pet_model import BasePETModel
 from hoopla.models.sar_model import BaseSARModel
@@ -38,6 +39,17 @@ def load_sar_model(name_or_path: str, from_path: bool = False) -> BaseSARModel:
         return module.SARModel()
 
     models = list_sar_models()
+
+    return models[name_or_path]
+
+
+def load_da_model(name_or_path: str, from_path: bool = False) -> BaseDAModel:
+    if from_path:
+        module = _load_module_form_path(name_or_path)
+
+        return module.DAModel()
+
+    models = list_da_models()
 
     return models[name_or_path]
 
@@ -81,6 +93,21 @@ def list_sar_models() -> dict[str, BaseSARModel]:
         if filepath.stem not in ['__init__', '__pycache__']:
             module = _load_module_form_path(str(filepath))
             model: BaseSARModel = module.SARModel()
+
+            models[model.name()] = model
+
+    return models
+
+
+def list_da_models() -> dict[str, BaseDAModel]:
+    """Returns dict of {model_name: model_instance}"""
+    models_path = Path(__file__).parent.resolve() / 'DA'
+
+    models = {}
+    for filepath in models_path.iterdir():
+        if filepath.stem not in ['__init__', '__pycache__']:
+            module = _load_module_form_path(str(filepath))
+            model: BaseDAModel = module.DAModel()
 
             models[model.name()] = model
 

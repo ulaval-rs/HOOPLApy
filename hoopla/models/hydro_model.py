@@ -26,13 +26,22 @@ class BaseHydroModel:
 
         self.model_params: Sequence[spotpy.parameter.Base] = []
 
+        self.operation = None
+
     def setup(self,
               config: Config,
+              operation: str,
               observations: dict,
               observations_for_warmup: dict,
               pet_model: BasePETModel,
               sar_model: BaseSARModel):
         self.config = config
+
+        if operation not in ('calibration', 'simulation', 'forecast'):
+            raise ValueError('Wrong operation. Can be "calibration", "simulation" or "forecast"')
+
+        self.operation = operation
+
         self.observations = observations
         self.observations_for_warmup = observations_for_warmup
         self.pet_model = pet_model
@@ -41,6 +50,7 @@ class BaseHydroModel:
     def setup_for_calibration(
             self,
             config: Config,
+            operation: str,
             objective_function: Callable,
             observations: dict,
             observations_for_warmup: dict,
@@ -48,7 +58,7 @@ class BaseHydroModel:
             pet_model: BasePETModel,
             sar_model: BaseSARModel,
             model_parameters: Sequence[spotpy.parameter.Base]):
-        self.setup(config, observations, observations_for_warmup, pet_model, sar_model)
+        self.setup(config, operation, observations, observations_for_warmup, pet_model, sar_model)
 
         self.objective_function = objective_function
         self.observed_streamflow = observed_streamflow
@@ -81,34 +91,87 @@ class BaseHydroModel:
         if self.config.general.compute_warm_up:
             state_variables_warmup, sar_state_variables_warmup = self._warmup(params)
 
-        # Compute E or get the one from the observations data
-        if self.config.general.compute_pet:
-            pet_params = self.pet_model.prepare(
-                time_step=self.config.general.time_step,
-                model_inputs={'dates': self.observations['dates'], 'T': self.observations['T']},
-                hyper_parameters={'latitude': self.observations['latitude']}
-            )
+        if self.config.data.do_data_assimilation and self.operation == 'simulation':
+            # Compute E or get the one from the observations data
+            if self.config.general.compute_pet:
+                ERP = np.empty(shape=(len(self.observations['dates']), self.config.data.N))
+                ERP[:] = np.nan
 
-            E = self.pet_model.run(pet_params)
+                for i in range(self.config.data.N):
+                    obs_tmp = {}
+                    obs_tmp['T'] = self.observations['TpetRP'][:, i]
+                    obs_tmp['Tmin'] = self.observations['TminRP'][:, i]
+                    obs_tmp['Tmax'] = self.observations['TmaxRP'][:, i]
+
+                    pet_params = self.pet_model.prepare(
+                        time_step=self.config.general.time_step,
+                        model_inputs={'dates': self.observations['dates'], 'T': obs_tmp['T']},
+                        hyper_parameters={'latitude': self.observations['latitude']}
+                    )
+                    ERP[:, i] = self.pet_model.run(pet_params)
+
+            if self.config.general.compute_snowmelt:
+                sar_state_variables = self.sar_model.prepare(params=params, hyper_parameters=self.observations)
+                sar_state_variables = [sar_state_variables for _ in range(self.config.data.N)]
+
+            # Init hydro model
+            state_variables = self.prepare(params)
+            state_variables = [state_variables for _ in range(self.config.data.N)]
+
+            simulated_streamflow = []  # Container for results
+
+            # Running the model while considering the SAR model or not.
+            if self.config.general.compute_snowmelt:
+                if self.config.general.compute_warm_up:
+                    sar_state_variables = sar_state_variables_warmup
+                else:
+                    sar_state_variables = self.sar_model.prepare(params=params, hyper_parameters=self.observations)
+
+                # Running simulation
+                return self._run_model_simulation(params, ERP, state_variables, sar_state_variables)
+
+            return np.array(simulated_streamflow)
+
+        # Compute E or get the one from the observations data
+        E = self._setup_pet_data() if self.config.general.compute_pet else self.observations['E']
+
+        # Init SAR model
+        if self.config.general.compute_snowmelt:
+            sar_state_variables = self.sar_model.prepare(params=params, hyper_parameters=self.observations)
         else:
-            E = self.observations['E']
+            sar_state_variables = None
 
         # Init hydro model
-        if self.config.general.compute_warm_up:
-            state_variables = state_variables_warmup
-        else:
-            state_variables = self.prepare(params)
+        state_variables = self.prepare(params)
 
+        if self.config.general.compute_warm_up:
+            for key, value in state_variables_warmup.items():
+                state_variables[key] = value
+
+            if self.config.general.compute_snowmelt:
+                for key, value in sar_state_variables_warmup.items():
+                    sar_state_variables[key] = value
+
+        return self._run_model_simulation(params, E, state_variables, sar_state_variables)
+
+    def objectivefunction(self, simulation: np.array, evaluation: np.array):
+        if self.config.calibration.remove_winter:
+            non_winter_indexes = find_non_winter_indexes(dates=self.observations['dates'])
+
+            evaluation = evaluation.take(non_winter_indexes)
+            simulation = simulation.take(non_winter_indexes)
+
+        return abs(self.objective_function(evaluation, simulation))
+
+    def _run_model_simulation(
+            self,
+            params: Union[ParameterSet, Sequence[float]],
+            E: np.ndarray,
+            state_variables: dict,
+            sar_state_variables: dict) -> np.ndarray:
         simulated_streamflow = []  # Container for results
 
-        # Running the model while considering the SAR model or not.
         if self.config.general.compute_snowmelt:
-            if self.config.general.compute_warm_up:
-                sar_state_variables = sar_state_variables_warmup
-            else:
-                sar_state_variables = self.sar_model.prepare(params=params, hyper_parameters=self.observations)
-
-            # Running simulation
             for i, _ in enumerate(self.observations['dates']):
                 runoff_d, sar_state_variables = self.sar_model.run(
                     model_inputs={
@@ -139,22 +202,13 @@ class BaseHydroModel:
 
         return np.array(simulated_streamflow)
 
-    def objectivefunction(self, simulation: np.array, evaluation: np.array):
-        if self.config.calibration.remove_winter:
-            non_winter_indexes = find_non_winter_indexes(dates=self.observations['dates'])
-
-            evaluation = evaluation.take(non_winter_indexes)
-            simulation = simulation.take(non_winter_indexes)
-
-        return abs(self.objective_function(evaluation, simulation))
-
     def _warmup(self, params: Union[ParameterSet, Sequence[float]]):
         """Warm up
 
         The warm-up initialize the state variables of the Hydro and SAR models, if applicable.
         """
-        # State variables to be return
-        sar_state_variables = {}
+        # State variables to be return (initialized to None)
+        sar_state_variables = None
 
         # Init hydro model
         state_variables = self.prepare(params)
@@ -166,7 +220,6 @@ class BaseHydroModel:
                 model_inputs={'dates': self.observations_for_warmup['dates'], 'T': self.observations_for_warmup['T']},
                 hyper_parameters={'latitude': self.observations_for_warmup['latitude']}
             )
-
             E = self.pet_model.run(pet_params)
         else:
             E = self.observations_for_warmup['E']
@@ -203,3 +256,12 @@ class BaseHydroModel:
                 )
 
         return state_variables, sar_state_variables
+
+    def _setup_pet_data(self):
+        pet_params = self.pet_model.prepare(
+            time_step=self.config.general.time_step,
+            model_inputs={'dates': self.observations['dates'], 'T': self.observations['T']},
+            hyper_parameters={'latitude': self.observations['latitude']}
+        )
+
+        return self.pet_model.run(pet_params)

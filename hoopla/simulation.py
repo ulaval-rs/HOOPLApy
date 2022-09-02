@@ -1,8 +1,11 @@
 import json
-import os
 import warnings
 
+from scipy.io import loadmat
+
+from hoopla import assimilation
 from hoopla.config import Config
+from hoopla.models.da_model import BaseDAModel
 from hoopla.models.hydro_model import BaseHydroModel
 from hoopla.models.pet_model import BasePETModel
 from hoopla.models.sar_model import BaseSARModel
@@ -14,13 +17,10 @@ def make_simulation(config: Config,
                     hydro_model: BaseHydroModel,
                     pet_model: BasePETModel,
                     sar_model: BaseSARModel,
+                    da_model: BaseDAModel,
                     parameters: list[float],
                     forecast_data: dict,
                     filepath_results: str):
-    # Reservoirs to update
-    if config.data.do_data_assimilation:
-        raise NotImplementedError
-
     # Run simulation
     simulated_streamflow = simulate(
         config=config,
@@ -29,6 +29,7 @@ def make_simulation(config: Config,
         hydro_model=hydro_model,
         pet_model=pet_model,
         sar_model=sar_model,
+        da_model=da_model,
         parameters=parameters,
         forecast_data=forecast_data
     )
@@ -54,18 +55,35 @@ def simulate(config: Config,
              hydro_model: BaseHydroModel,
              pet_model: BasePETModel,
              sar_model: BaseSARModel,
+             da_model: BaseDAModel,
              parameters: list[float],
              forecast_data: dict):
     # Reservoirs to update
     if config.data.do_data_assimilation:
-        raise NotImplementedError
+        all_model_update_res = loadmat(
+            file_name=f'./data/{config.general.time_step}/Misc/reservoir_to_update.mat',
+            simplify_cells=True
+        )
 
     # Simulation
     if config.data.do_data_assimilation:
+        observations, weights = assimilation.initialize(observations, config)
+
+        hydro_model.setup(
+            config=config,
+            operation='simulation',
+            observations=observations,
+            observations_for_warmup=observations_for_warm_up,
+            pet_model=pet_model,
+            sar_model=sar_model,
+        )
+        simulated_streamflow = hydro_model.simulation(parameters)
+
         raise NotImplementedError
     else:
         hydro_model.setup(
             config=config,
+            operation='simulation',
             observations=observations,
             observations_for_warmup=observations_for_warm_up,
             pet_model=pet_model,

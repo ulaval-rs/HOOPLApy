@@ -1,5 +1,7 @@
 import abc
 
+import numpy as np
+
 
 class BasePETModel:
 
@@ -23,5 +25,5 @@ class BasePETModel:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def run(self, params: dict):
+    def run(self, params: dict) -> np.ndarray:
         raise NotImplementedError
