@@ -112,6 +112,7 @@ def calibrate(config: Config,
     # Setup the hydro model with the correct data
     hydro_model.setup_for_calibration(
         config=config,
+        operation='calibration',
         objective_function=objective_function,
         observations=observations,
         observations_for_warmup=observations_for_warmup,

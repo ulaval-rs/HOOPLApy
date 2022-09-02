@@ -9,12 +9,11 @@ from hoopla.models.hydro_model import BaseHydroModel
 def shuffled_complex_evolution(hydro_model: BaseHydroModel, ngs: int, max_iteration: int) -> tuple[Sequence[float], float]:
     sampler = spotpy.algorithms.sceua(hydro_model, dbname='sceua-data', dbformat='csv')
     sampler.sample(
-        # repetitions=max_iteration,
-        repetitions=100,
+        repetitions=max_iteration,  # maximum number of function evaluations allowed during optimization
         ngs=ngs,
         kstop=10,
         peps=1e-4,
-        max_loop_inc=max_iteration
+        max_loop_inc=max_iteration * 10
     )
 
     return _load_results('sceua-data')

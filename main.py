@@ -11,6 +11,7 @@ catchment_names = list_catchments(config.general.time_step)
 hydro_models = models.list_hydro_models()
 pet_models = models.list_pet_models()
 sar_models = models.list_sar_models()
+da_models = models.list_da_models()
 
 # Listing models
 print('Available models\n----------------')
@@ -18,6 +19,7 @@ print('catchments', catchment_names)
 print('hydro_models', hydro_models)
 print('evapotranspiration_models', pet_models)
 print('snow_models', sar_models)
+print('da_models', da_models)
 
 # Load models
 print('Loading models ...')
@@ -25,6 +27,7 @@ catchment_name = catchment_names[0]
 hydro_model = models.load_hydro_model('HydroMod1')
 pet_model = models.load_pet_model('Oudin')
 sar_model = models.load_sar_model('CemaNeige')
+da_model = models.load_da_model('EnsembleKalmanFilter')
 
 # Load observations
 print('Loading data ...')
@@ -115,6 +118,7 @@ if config.operations.simulation:
         hydro_model=hydro_model,
         pet_model=pet_model,
         sar_model=sar_model,
+        da_model=da_model,
         parameters=calibrated_params,
         forecast_data=forecast_data,
         filepath_results=simulation_file_results
