@@ -143,25 +143,38 @@ class BaseHydroModel:
             simulated_streamflow = []
 
             if self.config.general.compute_snowmelt:
-                raise NotImplementedError
                 for t, _ in enumerate(self.observations['dates']):
-                    runoff_d, sar_state_variables = self.sar_model.run(
-                        model_inputs={
-                            'P': self.observations['P'][t],
-                            'T': self.observations['T'][t],
-                            'Tmin': self.observations['Tmin'][t],
-                            'Tmax': self.observations['Tmax'][t],
-                            'Date': self.observations['dates'][t]
-                        },
-                        params=params,
-                        state_variables=sar_state_variables
-                    )
-                    Qsim, state_variables = self.run(
-                        model_inputs={'P': runoff_d, 'E': ERP[t]},
-                        params=params,
-                        state_variables=state_variables
-                    )
-                    simulated_streamflow.append(Qsim)
+                    simulated_streamflow.append([])
+
+                    for j in range(self.config.data.N):
+                        runoff_d, sar_state_variables[j] = self.sar_model.run(
+                            model_inputs={
+                                'P': self.observations['PtRP'][t][j],
+                                'T': self.observations['TsnowRP'][t][j],
+                                'Tmin': self.observations['TminRP'][t][j],
+                                'Tmax': self.observations['TmaxRP'][t][j],
+                                'Date': self.observations['dates'][t]
+                            },
+                            params=params,
+                            state_variables=sar_state_variables[j]
+                        )
+                        Qsim, state_variables[j] = self.run(
+                            model_inputs={'P': self.observations['PtRP'][t][j], 'E': ERP[t][j]},
+                            params=params,
+                            state_variables=state_variables[j]
+                        )
+                        simulated_streamflow[-1].append(Qsim)
+
+                    if np.remainder(t, self.config.data.dt) == 0:
+                        if not np.any(np.isnan(self.observations['QRP'][t])):
+                            state_variables = self.da_model.run(
+                                state_variables=state_variables,
+                                Qsim=np.array(simulated_streamflow[-1]),
+                                Q=self.observations['Q'][t],
+                                QRP=self.observations['QRP'][t],
+                                eQ=self.observations['eQRP'][t],
+                                DA_config=self.config.data
+                            )
 
             else:
                 for t, _ in enumerate(self.observations['dates']):
@@ -169,7 +182,7 @@ class BaseHydroModel:
 
                     for j in range(self.config.data.N):
                         Qsim, state_variables[j] = self.run(
-                            model_inputs={'P': self.observations['P'][t], 'E': ERP[t][j]},
+                            model_inputs={'P': self.observations['PtRP'][t][j], 'E': ERP[t][j]},
                             params=params,
                             state_variables=state_variables[j]
                         )

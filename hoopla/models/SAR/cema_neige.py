@@ -172,7 +172,7 @@ class SARModel(BaseSARModel):
         # Potential of the area covered in snow
         Fpot = (Tz > 0) * np.minimum(G, Kf * (Tz - Tf) * fTg)
         
-        # Ratio of the area covered by snow
+        # Ratio of the area covered in snow
         Gthreshold = QNBV * 0.9
         fnts = np.clip(G / Gthreshold, a_max=1, a_min=None)
 
