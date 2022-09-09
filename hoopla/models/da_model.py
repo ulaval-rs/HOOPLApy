@@ -1,4 +1,9 @@
 import abc
+from typing import Iterable
+
+import numpy as np
+
+from .. import config
 
 
 class BaseDAModel:
@@ -11,5 +16,11 @@ class BaseDAModel:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def run(self):
+    def run(self,
+            state_variables: list,
+            Qsim: np.ndarray,
+            Q: np.ndarray,
+            QRP: np.ndarray,
+            eQ: np.ndarray,
+            DA_config: config.Data) -> tuple[dict, dict]:
         raise NotImplementedError

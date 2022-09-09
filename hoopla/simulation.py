@@ -60,10 +60,11 @@ def simulate(config: Config,
              forecast_data: dict):
     # Reservoirs to update
     if config.data.do_data_assimilation:
-        all_model_update_res = loadmat(
+        all_model_updated_res = loadmat(
             file_name=f'./data/{config.general.time_step}/Misc/reservoir_to_update.mat',
             simplify_cells=True
         )
+        config.data.updated_res = all_model_updated_res[hydro_model.name()]
 
     # Simulation
     if config.data.do_data_assimilation:
@@ -76,6 +77,7 @@ def simulate(config: Config,
             observations_for_warmup=observations_for_warm_up,
             pet_model=pet_model,
             sar_model=sar_model,
+            da_model=da_model
         )
         simulated_streamflow = hydro_model.simulation(parameters)
 
@@ -88,6 +90,7 @@ def simulate(config: Config,
             observations_for_warmup=observations_for_warm_up,
             pet_model=pet_model,
             sar_model=sar_model,
+            da_model=da_model
         )
         simulated_streamflow = hydro_model.simulation(parameters)
 
