@@ -120,6 +120,5 @@ if config.operations.simulation:
         sar_model=sar_model,
         da_model=da_model,
         parameters=calibrated_params,
-        forecast_data=forecast_data,
         filepath_results=simulation_file_results
     )

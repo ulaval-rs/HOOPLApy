@@ -37,7 +37,7 @@ class BaseHydroModel:
               observations_for_warmup: dict,
               pet_model: BasePETModel,
               sar_model: BaseSARModel,
-              da_model: BaseDAModel):
+              da_model: BaseDAModel = None):
         self.config = config
 
         if operation not in ('calibration', 'simulation', 'forecast'):
@@ -61,9 +61,8 @@ class BaseHydroModel:
             observed_streamflow: Sequence[float],
             pet_model: BasePETModel,
             sar_model: BaseSARModel,
-            da_model: BaseDAModel,
             model_parameters: Sequence[spotpy.parameter.Base]):
-        self.setup(config, operation, observations, observations_for_warmup, pet_model, sar_model, da_model)
+        self.setup(config, operation, observations, observations_for_warmup, pet_model, sar_model)
 
         self.objective_function = objective_function
         self.observed_streamflow = observed_streamflow

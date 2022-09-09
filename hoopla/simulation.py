@@ -19,7 +19,6 @@ def make_simulation(config: Config,
                     sar_model: BaseSARModel,
                     da_model: BaseDAModel,
                     parameters: list[float],
-                    forecast_data: dict,
                     filepath_results: str):
     # Run simulation
     simulated_streamflow = simulate(
@@ -31,7 +30,6 @@ def make_simulation(config: Config,
         sar_model=sar_model,
         da_model=da_model,
         parameters=parameters,
-        forecast_data=forecast_data
     )
 
     # Save results
@@ -41,7 +39,6 @@ def make_simulation(config: Config,
         'PET_model': pet_model.name(),
         'SAR_model': sar_model.name(),
         'Qsim': list(simulated_streamflow),
-        # 'DateForecast': list(date_forecast),
     }
 
     with open(filepath_results, 'w') as file:
@@ -56,8 +53,7 @@ def simulate(config: Config,
              pet_model: BasePETModel,
              sar_model: BaseSARModel,
              da_model: BaseDAModel,
-             parameters: list[float],
-             forecast_data: dict):
+             parameters: list[float]):
     # Reservoirs to update
     if config.data.do_data_assimilation:
         all_model_updated_res = loadmat(
@@ -79,19 +75,15 @@ def simulate(config: Config,
             sar_model=sar_model,
             da_model=da_model
         )
-        simulated_streamflow = hydro_model.simulation(parameters)
+        return hydro_model.simulation(parameters)
 
-        raise NotImplementedError
-    else:
-        hydro_model.setup(
-            config=config,
-            operation='simulation',
-            observations=observations,
-            observations_for_warmup=observations_for_warm_up,
-            pet_model=pet_model,
-            sar_model=sar_model,
-            da_model=da_model
-        )
-        simulated_streamflow = hydro_model.simulation(parameters)
-
-    return simulated_streamflow
+    hydro_model.setup(
+        config=config,
+        operation='simulation',
+        observations=observations,
+        observations_for_warmup=observations_for_warm_up,
+        pet_model=pet_model,
+        sar_model=sar_model,
+        da_model=da_model
+    )
+    return hydro_model.simulation(parameters)
