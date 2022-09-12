@@ -19,7 +19,7 @@ def crop_data(config: Config,
               ini_type: str,
               forecast_data: Optional[dict] = None) -> Tuple[dict, dict, dict]:
     # Initializing variables to be returned
-    observations_for_forecast = {} if forecast_data is None else forecast_data
+    forecast_data_tmp = {} if forecast_data is None else forecast_data.copy()
     observations_for_warm_up = {}
 
     # Cropable data
@@ -28,7 +28,7 @@ def crop_data(config: Config,
     sar_variables = sar_model.inputs() if config.general.compute_snowmelt else []
 
     cropable_data_obs = {'dates', 'Q', *hydro_variables, *pet_variables, *sar_variables}
-    cropable_data_forecast = {'Pt', 'T', 'Tmax', 'Tmin'}
+    cropable_data_forecast = {'P', 'T', 'Tmax', 'Tmin'}
 
     # Dates
     ## Retrieve calibration/validation/forecast start and end dates
@@ -60,22 +60,21 @@ def crop_data(config: Config,
 
     ## Croping data for forecast
     if ini_type == 'ini_forecast':
-        # TODO: implement this https://github.com/ulaval-rs/HOOPLA/blob/master/Tools/Misc/cropData.m
         if not config.forecast.perfect_forecast:
             # Forecast dates
-            select_forecast_1 = np.array([config.dates.forecast.begin <= d <= config.dates.forecast.end for d in observations_for_forecast['dates']])  # Array of True and False corresponding to the indices of dates between forecast start and forecast end.
-            dates_without_hours = [datetime.datetime(year=d.year, month=d.month, day=d.day) for d in observations_for_forecast['dates']]
+            select_forecast_1 = np.array([config.dates.forecast.begin <= d <= config.dates.forecast.end for d in forecast_data_tmp['dates']])  # Array of True and False corresponding to the indices of dates between forecast start and forecast end.
+            dates_without_hours = [datetime.datetime(year=d.year, month=d.month, day=d.day) for d in forecast_data_tmp['dates']]
 
             # issue_time can be a list of time, or an int
             if isinstance(config.forecast.issue_time, list):
                 issue_time_deltas = [datetime.timedelta(hours=h) for h in config.forecast.issue_time]
-                select_forecast_2 = np.array([d in issue_time_deltas  for d in (observations_for_forecast['dates'] - dates_without_hours)])  # indices of dates corresponding to hydrological issue time
+                select_forecast_2 = np.array([d in issue_time_deltas for d in (forecast_data_tmp['dates'] - dates_without_hours)])  # indices of dates corresponding to hydrological issue time
             else:
-                select_forecast_2 = np.array([d == datetime.timedelta(hours=config.forecast.issue_time) for d in (observations_for_forecast['dates'] - dates_without_hours)])  # indices of dates corresponding to hydrological issue time
+                select_forecast_2 = np.array([d == datetime.timedelta(hours=config.forecast.issue_time) for d in (forecast_data_tmp['dates'] - dates_without_hours)])  # indices of dates corresponding to hydrological issue time
 
             select_forecast = select_forecast_1 & select_forecast_2
 
-            forecast_dates = observations_for_forecast['dates'][select_forecast]
+            forecast_dates = forecast_data_tmp['dates'][select_forecast]
 
             # Error handling
             if len(forecast_dates) == 0:
@@ -92,7 +91,17 @@ def crop_data(config: Config,
             date_ref = observations['dates'][select]  # Array of dates containing all times steps during the forecasting period
             select_ref = np.array([d in forecast_dates for d in date_ref])  # Find indices of dateRef that also belong to dateFcast
 
-            raise NotImplementedError
+            # Initialization
+            for obs in cropable_data_forecast:
+                forecast_data[obs] = np.empty(shape=(len(date_ref), config.forecast.horizon))
+                forecast_data[obs][:] = np.nan
+
+            # Retrieve data
+            for obs in cropable_data_forecast:
+                forecast_data[obs][select_ref] = forecast_data_tmp[obs][select_forecast][:, :config.forecast.horizon]
+
+            forecast_data['dates'] = date_ref
+            forecast_data['leadTime'] = forecast_data_tmp['leadTime'][:config.forecast.horizon]
 
         if config.forecast.perfect_forecast:
             raise NotImplementedError
@@ -146,4 +155,4 @@ def crop_data(config: Config,
         if ini_type == 'ini_calibration' and np.sum(np.isnan(observations['Q'])) == 0:
             raise ValueError('All streamflow are NaN. The calibration is not possible. Please, change calibration dates')
 
-    return observations, observations_for_forecast, observations_for_warm_up
+    return observations, forecast_data_tmp, observations_for_warm_up
