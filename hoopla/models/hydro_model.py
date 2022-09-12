@@ -220,6 +220,9 @@ class BaseHydroModel:
                 for key, value in sar_state_variables_warmup.items():
                     sar_state_variables[key] = value
 
+        if self.operation == 'forecast':
+            raise NotImplementedError
+
         return self._run_model_simulation(params, E, state_variables, sar_state_variables)
 
     def objectivefunction(self, simulation: np.array, evaluation: np.array):

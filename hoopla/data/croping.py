@@ -1,6 +1,6 @@
 import datetime
 import warnings
-from typing import Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 
@@ -11,11 +11,15 @@ from hoopla.models.sar_model import BaseSARModel
 from hoopla.models.util import find_day_of_year
 
 
-def crop_data(config: Config, observations: dict,
-              hydro_model: BaseHydroModel, pet_model: BasePETModel, sar_model: BaseSARModel,
-              ini_type: str) -> Tuple[dict, dict, dict]:
+def crop_data(config: Config,
+              observations: dict,
+              hydro_model: BaseHydroModel,
+              pet_model: BasePETModel,
+              sar_model: BaseSARModel,
+              ini_type: str,
+              forecast_data: Optional[dict] = None) -> Tuple[dict, dict, dict]:
     # Initializing variables to be returned
-    observations_for_forecast = {}
+    observations_for_forecast = {} if forecast_data is None else forecast_data
     observations_for_warm_up = {}
 
     # Cropable data
@@ -58,6 +62,14 @@ def crop_data(config: Config, observations: dict,
     if ini_type == 'ini_forecast':
         # TODO: implement this https://github.com/ulaval-rs/HOOPLA/blob/master/Tools/Misc/cropData.m
         if not config.forecast.perfect_forecast:
+            # Forecast dates
+            select_forecast_1 = np.array([config.dates.forecast.begin <= d <= config.dates.forecast.end for d in observations_for_forecast['dates']])  # Array of True and False corresponding to the indices of dates between forecast start and forecast end.
+            dates_without_hours = [datetime.datetime(year=d.year, month=d.month, day=d.day) for d in observations_for_forecast['dates']]
+            select_forecast_2 = np.array([d == datetime.timedelta(hours=config.forecast.issue_time) for d in (observations_for_forecast['dates'] - dates_without_hours)])  # indices of dates corresponding to hydrological issue time
+            select_forecast = select_forecast_1 & select_forecast_2
+
+            forecast_dates = observations_for_forecast['dates'][select_forecast]
+
             raise NotImplementedError
 
         if config.forecast.perfect_forecast:

@@ -2,8 +2,8 @@
 
 [operations]
 calibration = false  # Run calibration
-simulation  = true  # Run simulation
-forecast    = false  # Run forecast
+simulation  = false  # Run simulation
+forecast    = true  # Run forecast
 
 [dates]
 #calibration.begin = 1997-01-01T03:00:00
@@ -40,7 +40,7 @@ horizon          = 80    # Horizon of the forecast (in time steps)
 meteo_ens        = false # Use meteorological ensemble forecast
 
 [data]
-do_data_assimilation = true      # Perform data assimilation
+do_data_assimilation = false      # Perform data assimilation
 tech                 = 'EnKF' # Choose either 'EnKF' (Ensemble Kalman Filter), 'PF' (particle filter), or 'PertOnly' (perturbation of inputs only)
 Uc_Q                 = 0.1    # Discharge (standard deviation=10# * Qobs)
 Uc_Pt                = 0.5    # Rainfal (standard deviation=50# * Pt mm, reference:Liu et al 2012,Reichl 2002)

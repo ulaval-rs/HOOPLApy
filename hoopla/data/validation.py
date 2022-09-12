@@ -69,19 +69,19 @@ def validate_snow_accounting(data_obs: dict, sar_model: BaseSARModel) -> dict:
 def validate_meteorological_forecast(config: Config, data_meteo_forecast: dict, sar_model: BaseSARModel) -> dict:
     if config.forecast.perfect_forecast == 0:
         if config.forecast.meteo_ens:
-            raise NotImplemented(
+            raise NotImplementedError(
                 """Implement this: if Switches.forecast.metEns.on == 1
                     metFile=matfile(DataPath.dataMetFcast);
                     DataMetFcast=metFile.Met_fcast(1,DataPath.dataMetFcastEnsMb);"""
             )
 
-        if 'Date' not in data_meteo_forecast:
+        if 'dates' not in data_meteo_forecast:
             raise ValueError('Hydrology:Data, Meteorological date matrix not provided.')
 
         if 'leadTime' not in data_meteo_forecast:
             raise ValueError('Hydrology:Data, Meteorological lead times not provided.')
 
-        if 'Pt' not in data_meteo_forecast:
+        if 'P' not in data_meteo_forecast:
             raise ValueError('Hydrology:Data, Meteorological precipitation forecast not provided.')
 
         if 'T' not in data_meteo_forecast:
@@ -109,7 +109,7 @@ def validate_meteorological_forecast(config: Config, data_meteo_forecast: dict, 
                               'This may result in a decrease of performance, especially if the '
                               'Hydrodel function was used during calibration')
 
-        if config.forecast.horizon > len(data_meteo_forecast['Pt']):
+        if config.forecast.horizon > len(data_meteo_forecast['P']):
             raise ValueError('Hydrology:Data, The specified forecast horizon is longer '
                              'than the meteorological forecast horizon')
 

@@ -41,6 +41,11 @@ def load_forecast_data(filepath: str, file_format: str, config: Config, sar_mode
     if file_format == 'mat':
         forecast_data = loadmat(file_name=filepath, simplify_cells=True)
 
+        forecast_data['P'] = forecast_data.pop('Pt')
+        forecast_data['dates'] = np.array(
+            [datetime(year=d[0], month=d[1], day=d[2], hour=d[3], minute=d[4], second=d[5]) for d in forecast_data.pop('Date')]
+        )
+
     else:
         raise ValueError(f'"{file_format}" file_format not supported/not found.')
 

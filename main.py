@@ -4,6 +4,7 @@ from hoopla.calibration.calibration import make_calibration
 from hoopla.config import DATA_PATH
 from hoopla.initialization import list_catchments
 from hoopla.simulation import make_simulation
+from hoopla.forecast import make_forecast
 
 config = hoopla.load_config('./config.toml')
 
@@ -71,7 +72,7 @@ if config.operations.calibration:
 
     # Crop observed data according to specified dates and warm up
     print('Removing unused data ...')
-    observations, observations_for_forecast, observations_for_warm_up = data.crop_data(
+    observations, _, observations_for_warm_up = data.crop_data(
         config=config,
         observations=observations,
         hydro_model=hydro_model,
@@ -101,7 +102,7 @@ if config.operations.simulation:
 
     # Crop data for the simulation
     print('Removing unused data ...')
-    observations, observations_for_forecast, observations_for_warm_up = data.crop_data(
+    observations, _, observations_for_warm_up = data.crop_data(
         config=config,
         observations=observations,
         hydro_model=hydro_model,
@@ -112,6 +113,38 @@ if config.operations.simulation:
 
     print('Starting simulation ...')
     make_simulation(
+        observations=observations,
+        observations_for_warm_up=observations_for_warm_up,
+        config=config,
+        hydro_model=hydro_model,
+        pet_model=pet_model,
+        sar_model=sar_model,
+        da_model=da_model,
+        parameters=calibrated_params,
+        filepath_results=simulation_file_results
+    )
+
+# Forecast
+if config.operations.forecast:
+    calibrated_params = data.load_calibrated_model_parameters(
+        filepath=calibration_file_results
+    )
+
+    # Crop data for the simulation
+    print('Removing unused data ...')
+    observations, observations_for_forecast, observations_for_warm_up = data.crop_data(
+        config=config,
+        observations=observations,
+        hydro_model=hydro_model,
+        pet_model=pet_model,
+        sar_model=sar_model,
+        ini_type='ini_forecast',
+        forecast_data=forecast_data
+    )
+
+    raise NotImplementedError('Ajout forecast data')
+    print('Starting forecast')
+    make_forecast(
         observations=observations,
         observations_for_warm_up=observations_for_warm_up,
         config=config,
