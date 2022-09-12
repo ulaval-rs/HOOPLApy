@@ -65,10 +65,32 @@ def crop_data(config: Config,
             # Forecast dates
             select_forecast_1 = np.array([config.dates.forecast.begin <= d <= config.dates.forecast.end for d in observations_for_forecast['dates']])  # Array of True and False corresponding to the indices of dates between forecast start and forecast end.
             dates_without_hours = [datetime.datetime(year=d.year, month=d.month, day=d.day) for d in observations_for_forecast['dates']]
-            select_forecast_2 = np.array([d == datetime.timedelta(hours=config.forecast.issue_time) for d in (observations_for_forecast['dates'] - dates_without_hours)])  # indices of dates corresponding to hydrological issue time
+
+            # issue_time can be a list of time, or an int
+            if isinstance(config.forecast.issue_time, list):
+                issue_time_deltas = [datetime.timedelta(hours=h) for h in config.forecast.issue_time]
+                select_forecast_2 = np.array([d in issue_time_deltas  for d in (observations_for_forecast['dates'] - dates_without_hours)])  # indices of dates corresponding to hydrological issue time
+            else:
+                select_forecast_2 = np.array([d == datetime.timedelta(hours=config.forecast.issue_time) for d in (observations_for_forecast['dates'] - dates_without_hours)])  # indices of dates corresponding to hydrological issue time
+
             select_forecast = select_forecast_1 & select_forecast_2
 
             forecast_dates = observations_for_forecast['dates'][select_forecast]
+
+            # Error handling
+            if len(forecast_dates) == 0:
+                raise ValueError(f'Hydrology:Forecast: There is no available meteorological forecast issued at config.forecast.issue_time : {config.forecast.issue_time}.')
+            if time_step != 0:
+                if isinstance(config.forecast.issue_time, list):
+                    for h in config.forecast.issue_time:
+                        if not np.any([d.hour == h for d in forecast_dates]):
+                            warnings.warn(f'Hydrology:Forecast: There is no available meteorological forecast issued at {h}. No hydrological forecast will be issued at this time.')
+                else:
+                    if not np.any([d.hour == config.forecast.issue_time for d in forecast_dates]):
+                        warnings.warn(f'Hydrology:Forecast: There is no available meteorological forecast issued at {config.forecast.issue_time}. No hydrological forecast will be issued at this time.')
+
+            date_ref = observations['dates'][select]  # Array of dates containing all times steps during the forecasting period
+            select_ref = np.array([d in forecast_dates for d in date_ref])  # Find indices of dateRef that also belong to dateFcast
 
             raise NotImplementedError
 
