@@ -35,7 +35,7 @@ SCE.ngs        = 25     # Number of Complexes for the SCE optimization
 
 [forecast]
 issue_time       = 6     # Hour of the day for which a forecast is issued (can be several per day ex: [6 12 18 24])
-perfect_forecast = false # Use meteorological observations as meteorological forecast
+perfect_forecast = true # Use meteorological observations as meteorological forecast
 horizon          = 80    # Horizon of the forecast (in time steps)
 meteo_ens        = false # Use meteorological ensemble forecast
 

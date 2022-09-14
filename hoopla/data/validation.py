@@ -114,3 +114,7 @@ def validate_meteorological_forecast(config: Config, data_meteo_forecast: dict, 
                              'than the meteorological forecast horizon')
 
         return data_meteo_forecast
+
+    elif config.forecast.perfect_forecast:
+        return {}
+

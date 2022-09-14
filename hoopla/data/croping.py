@@ -104,9 +104,34 @@ def crop_data(config: Config,
             forecast_data['leadTime'] = forecast_data_tmp['leadTime'][:config.forecast.horizon]
 
         if config.forecast.perfect_forecast:
-            raise NotImplementedError
+            select_forecast = np.array([config.dates.forecast.begin <= d <= config.dates.forecast.end for d in observations['dates']])  # Array of True and False corresponding to the indices of dates between forecast start and forecast end.
+            id_select_forecast = np.where(select_forecast == True)[0]
 
-        raise NotImplementedError
+            if config.dates.forecast.end + datetime.timedelta(days=config.forecast.horizon * time_step / 24) > observations['dates'][-1]:
+                raise ValueError(
+                    'Hydrology:Dates: The specified forecasting dates are out of the available period. '
+                    'When using perfect forecast, the last forecasting date plus the forecast horizon should not '
+                    'exceed the last available day of observed data. Consider changing the end of the forecast period.'
+                )
+
+            # Initialization of matrices
+            for obs in cropable_data_forecast:
+                forecast_data[obs] = np.empty(shape=(np.size(id_select_forecast), config.forecast.horizon))
+                forecast_data[obs][:] = np.nan
+
+            # Retrieve "forecast" data from observation data
+            for obs in cropable_data_forecast:
+                for i, index in enumerate(id_select_forecast):
+                    forecast_data[obs][i] = observations[obs][index+1:index+config.forecast.horizon+1]
+
+            forecast_data['dates'] = observations['dates'][select_forecast]
+            forecast_data['leadTime'] = np.arange(1, config.forecast.horizon+1) * time_step / 24
+
+            if time_step % 24 != 0:  # Set to NaN values that corresponds to a date that isn't a date when a hydrological forecast is issued
+                                     # (only when modeling time step is smaller than 24 hours, otherwise 1 forecast per day is issued)
+                id_nan = np.array([d.hour != config.forecast.issue_time for d in forecast_data['dates']])
+                for obs in cropable_data_forecast:
+                    forecast_data[obs][id_nan] = np.nan
 
     ## Croping data for warm up
     if config.general.compute_warm_up:
@@ -155,4 +180,4 @@ def crop_data(config: Config,
         if ini_type == 'ini_calibration' and np.sum(np.isnan(observations['Q'])) == 0:
             raise ValueError('All streamflow are NaN. The calibration is not possible. Please, change calibration dates')
 
-    return observations, forecast_data_tmp, observations_for_warm_up
+    return observations, forecast_data, observations_for_warm_up
