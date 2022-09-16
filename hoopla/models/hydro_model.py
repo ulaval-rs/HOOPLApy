@@ -5,6 +5,7 @@ import numpy as np
 import spotpy
 from spotpy.parameter import ParameterSet
 
+from hoopla import assimilation
 from hoopla.models.da_model import BaseDAModel
 from hoopla.models.sar_model import BaseSARModel
 from hoopla.models.util import find_non_winter_indexes
@@ -20,6 +21,8 @@ class BaseHydroModel:
 
         self.observations: Optional[dict] = None
         self.observations_for_warmup: Optional[dict] = None
+        self.observations_for_forecast: Optional[dict] = None
+
         self.observed_streamflow: Optional[Sequence] = None
 
         self.pet_model: Optional[BasePETModel] = None
@@ -34,9 +37,10 @@ class BaseHydroModel:
               config: Config,
               operation: str,
               observations: dict,
-              observations_for_warmup: dict,
               pet_model: BasePETModel,
               sar_model: BaseSARModel,
+              observations_for_warmup: dict,
+              observations_for_forecast: dict = None,
               da_model: BaseDAModel = None):
         self.config = config
 
@@ -47,6 +51,8 @@ class BaseHydroModel:
 
         self.observations = observations
         self.observations_for_warmup = observations_for_warmup
+        self.observations_for_forecast = observations_for_forecast
+
         self.pet_model = pet_model
         self.sar_model = sar_model
         self.da_model = da_model
@@ -62,7 +68,14 @@ class BaseHydroModel:
             pet_model: BasePETModel,
             sar_model: BaseSARModel,
             model_parameters: Sequence[spotpy.parameter.Base]):
-        self.setup(config, operation, observations, observations_for_warmup, pet_model, sar_model)
+        self.setup(
+            config=config,
+            operation=operation,
+            observations=observations,
+            observations_for_warmup=observations_for_warmup,
+            pet_model=pet_model,
+            sar_model=sar_model
+        )
 
         self.objective_function = objective_function
         self.observed_streamflow = observed_streamflow
@@ -94,9 +107,91 @@ class BaseHydroModel:
     def simulation(self, params: Union[ParameterSet, Sequence[float]]) -> np.ndarray:
         if self.config.general.compute_warm_up:
             state_variables_warmup, sar_state_variables_warmup = self._warmup(params)
+        else:
+            state_variables_warmup, sar_state_variables_warmup = None, None
 
-        if self.config.data.do_data_assimilation and self.operation == 'simulation':
-            # Compute E or get the one from the observations data
+        if self.operation == 'calibration':
+            return self._calibration(params, state_variables_warmup, sar_state_variables_warmup)
+
+        if self.operation == 'simulation':
+            return self._simulation(params, state_variables_warmup, sar_state_variables_warmup)
+
+        if self.operation == 'forecast':
+            return self._forecast(params, state_variables_warmup, sar_state_variables_warmup)
+
+    def _calibration(self,
+                     params: Union[ParameterSet, Sequence[float]],
+                     state_variables_warmup: dict = None,
+                     sar_state_variables_warmup: dict = None) -> np.ndarray:
+        # Compute E or get the one from the observations data
+        if self.config.general.compute_pet:
+            E = self._setup_pet_data()
+        else:
+            E = self.observations['E']
+
+        # Init SAR model
+        if self.config.general.compute_snowmelt:
+            sar_state_variables = self.sar_model.prepare(params=params, hyper_parameters=self.observations)
+        else:
+            sar_state_variables = None
+
+        # Init hydro model
+        state_variables = self.prepare(params)
+
+        if self.config.general.compute_warm_up:
+            for key, value in state_variables_warmup.items():
+                state_variables[key] = value
+
+            if self.config.general.compute_snowmelt:
+                for key, value in sar_state_variables_warmup.items():
+                    sar_state_variables[key] = value
+
+        # Run simulation
+        simulated_streamflow = []  # Container for results
+
+        # With snow accounting
+        if self.config.general.compute_snowmelt:
+            for i, _ in enumerate(self.observations['dates']):
+                runoff_d, sar_state_variables = self.sar_model.run(
+                    model_inputs={
+                        'P': self.observations['P'][i],
+                        'T': self.observations['T'][i],
+                        'Tmin': self.observations['Tmin'][i],
+                        'Tmax': self.observations['Tmax'][i],
+                        'Date': self.observations['dates'][i]
+                    },
+                    params=params,
+                    state_variables=sar_state_variables
+                )
+                Qsim, state_variables = self.run(
+                    model_inputs={'P': runoff_d, 'E': E[i]},
+                    params=params,
+                    state_variables=state_variables
+                )
+                simulated_streamflow.append(Qsim)
+
+        else:
+            for i, _ in enumerate(self.observations['dates']):
+                Qsim, state_variables = self.run(
+                    model_inputs={'P': self.observations['P'][i], 'E': E[i]},
+                    params=params,
+                    state_variables=state_variables
+                )
+                simulated_streamflow.append(Qsim)
+
+        return np.array(simulated_streamflow)
+
+    def _simulation(self,
+                    params: Union[ParameterSet, Sequence[float]],
+                    state_variables_warmup: dict = None,
+                    sar_state_variables_warmup: dict = None) -> np.ndarray:
+        # Data assimilation initialization
+        if self.config.data.do_data_assimilation:
+            self.observations, weights = assimilation.initialize(self.observations, self.config)
+
+        # Simulation with Data Assimilation
+        if self.config.data.do_data_assimilation:
+            # Compute potential evapotranspiration
             if self.config.general.compute_pet:
                 ERP = np.empty(shape=(len(self.observations['dates']), self.config.data.N))
                 ERP[:] = np.nan
@@ -115,13 +210,13 @@ class BaseHydroModel:
                     )
                     ERP[:, t] = self.pet_model.run(pet_params)
 
-            # Init SAR model
+            # Snow accounting model initialization
             if self.config.general.compute_snowmelt:
                 sar_state_variables = self.sar_model.prepare(params=params, hyper_parameters=self.observations)
             else:
                 sar_state_variables = None
 
-            # Init hydro model
+            # Hydrological model initialization
             state_variables = self.prepare(params)
 
             # Initialization of states with WarmUp
@@ -166,13 +261,14 @@ class BaseHydroModel:
 
                     if np.remainder(t, self.config.data.dt) == 0:
                         if not np.any(np.isnan(self.observations['QRP'][t])):
-                            state_variables = self.da_model.run(
+                            state_variables, weights = self.da_model.run(
                                 state_variables=state_variables,
                                 Qsim=np.array(simulated_streamflow[-1]),
                                 Q=self.observations['Q'][t],
                                 QRP=self.observations['QRP'][t],
                                 eQ=self.observations['eQRP'][t],
-                                DA_config=self.config.data
+                                DA_config=self.config.data,
+                                weights=weights
                             )
 
             else:
@@ -189,13 +285,14 @@ class BaseHydroModel:
 
                     if np.remainder(t, self.config.data.dt) == 0:
                         if not np.any(np.isnan(self.observations['QRP'][t])):
-                            state_variables = self.da_model.run(
+                            state_variables, weights = self.da_model.run(
                                 state_variables=state_variables,
                                 Qsim=np.array(simulated_streamflow[-1]),
                                 Q=self.observations['Q'][t],
                                 QRP=self.observations['QRP'][t],
                                 eQ=self.observations['eQRP'][t],
-                                DA_config=self.config.data
+                                DA_config=self.config.data,
+                                weights=weights
                             )
 
             return np.array(simulated_streamflow)
@@ -221,25 +318,9 @@ class BaseHydroModel:
                     sar_state_variables[key] = value
 
         if self.operation == 'forecast':
+
             raise NotImplementedError
 
-        return self._run_model_simulation(params, E, state_variables, sar_state_variables)
-
-    def objectivefunction(self, simulation: np.array, evaluation: np.array):
-        if self.config.calibration.remove_winter:
-            non_winter_indexes = find_non_winter_indexes(dates=self.observations['dates'])
-
-            evaluation = evaluation.take(non_winter_indexes)
-            simulation = simulation.take(non_winter_indexes)
-
-        return abs(self.objective_function(evaluation, simulation))
-
-    def _run_model_simulation(
-            self,
-            params: Union[ParameterSet, Sequence[float]],
-            E: np.ndarray,
-            state_variables: dict,
-            sar_state_variables: dict) -> np.ndarray:
         simulated_streamflow = []  # Container for results
 
         if self.config.general.compute_snowmelt:
@@ -272,6 +353,127 @@ class BaseHydroModel:
                 simulated_streamflow.append(Qsim)
 
         return np.array(simulated_streamflow)
+
+    def _forecast(self,
+                  params: Union[ParameterSet, Sequence[float]],
+                  state_variables_warmup: dict = None,
+                  sar_state_variables_warmup: dict = None) -> np.ndarray:
+        sar_results_forecast = {}
+
+        # Data assimilation initialization
+        if self.config.data.do_data_assimilation:
+            self.observations, weights = assimilation.initialize(self.observations, self.config)
+
+        # Simulation with Data Assimilation
+        if self.config.data.do_data_assimilation:
+            raise NotImplementedError
+
+        # Compute potential evapotranspiration
+        if self.config.general.compute_pet:
+            E = self._setup_pet_data()
+        else:
+            E = self.observations['E']
+
+        # Snow accounting model initialization
+        if self.config.general.compute_snowmelt:
+            sar_state_variables = self.sar_model.prepare(params=params, hyper_parameters=self.observations)
+        else:
+            sar_state_variables = None
+
+        # Init hydro model
+        state_variables = self.prepare(params)
+
+        if self.config.general.compute_warm_up:
+            for key, value in state_variables_warmup.items():
+                state_variables[key] = value
+
+            if self.config.general.compute_snowmelt:
+                for key, value in sar_state_variables_warmup.items():
+                    sar_state_variables[key] = value
+
+        # Initialization matrices forecast
+        nbr_forecast_issue = len(self.observations_for_forecast['dates'])
+        self.observations_for_forecast['E'] = np.empty(shape=(nbr_forecast_issue, self.config.forecast.horizon))
+        self.observations_for_forecast['E'][:] = np.nan
+        Q_forecast = np.empty(shape=(nbr_forecast_issue, self.config.forecast.horizon))
+        Q_forecast[:] = np.nan
+
+        if self.config.general.compute_snowmelt:
+            sar_results_forecast['runOff_d'] = np.empty(shape=(nbr_forecast_issue, self.config.forecast.horizon))
+
+        # Run simulation
+        simulated_streamflow = []  # Container for results
+
+        if self.config.general.compute_snowmelt:
+            # With snow accounting
+            for t, _ in enumerate(self.observations['dates']):
+                runoff_d, sar_state_variables = self.sar_model.run(
+                    model_inputs={
+                        'P': self.observations['P'][t],
+                        'T': self.observations['T'][t],
+                        'Tmin': self.observations['Tmin'][t],
+                        'Tmax': self.observations['Tmax'][t],
+                        'Date': self.observations['dates'][t]
+                    },
+                    params=params,
+                    state_variables=sar_state_variables
+                )
+                Qsim, state_variables = self.run(
+                    model_inputs={'P': runoff_d, 'E': E[t]},
+                    params=params,
+                    state_variables=state_variables
+                )
+                simulated_streamflow.append(Qsim)
+
+                # Hydrological Forecast
+                if not np.any(np.isnan(self.observations_for_forecast['P'][t])):
+                    if self.config.general.compute_pet:
+                        data_forecast_pet = {}
+                        data_forecast_pet['dates'] = self.observations_for_forecast['dates'][t] + self.observations_for_forecast['leadTime']
+                        data_forecast_pet['T'] = self.observations_for_forecast['T'][t]
+                        data_forecast_pet['Tmin'] = self.observations_for_forecast['Tmin'][t]
+                        data_forecast_pet['Tmax'] = self.observations_for_forecast['Tmax'][t]
+                        data_forecast_pet = {**self.observations, **data_forecast_pet}
+
+                        pet_params = self.pet_model.prepare(
+                            time_step=self.config.general.time_step,
+                            model_inputs={'dates': data_forecast_pet['dates'], 'T': data_forecast_pet['T']},
+                            hyper_parameters={'latitude': data_forecast_pet['latitude']}
+                        )
+                        self.observations_for_forecast['E'][t] = self.pet_model.run(pet_params)
+
+                    # Set the initial forecast states with the ones obtained from simulation
+                    sar_state_variables_forecast = sar_state_variables
+                    state_variables_forecast = state_variables
+                    # Loop over lead times
+                    for i in range(self.config.forecast.horizon):
+                        # Snow
+                        i_date = self.observations_for_forecast['dates'][t] + self.observations_for_forecast['leadTime'][i]
+                        sar_results_forecast['runOff_d'], sar_state_variables_forecast = self.sar_model.prepare(
+                            TODO
+                        )
+                    raise NotImplementedError
+
+        else:
+            for t, _ in enumerate(self.observations['dates']):
+                Qsim, state_variables = self.run(
+                    model_inputs={'P': self.observations['P'][t], 'E': E[t]},
+                    params=params,
+                    state_variables=state_variables
+                )
+                simulated_streamflow.append(Qsim)
+
+        return np.array(simulated_streamflow)
+
+
+    def objectivefunction(self, simulation: np.array, evaluation: np.array):
+        if self.config.calibration.remove_winter:
+            non_winter_indexes = find_non_winter_indexes(dates=self.observations['dates'])
+
+            evaluation = evaluation.take(non_winter_indexes)
+            simulation = simulation.take(non_winter_indexes)
+
+        return abs(self.objective_function(evaluation, simulation))
 
     def _warmup(self, params: Union[ParameterSet, Sequence[float]]):
         """Warm up

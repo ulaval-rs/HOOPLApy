@@ -1,3 +1,5 @@
+from typing import Iterable
+
 import numpy as np
 
 from hoopla import config
@@ -18,7 +20,8 @@ class DAModel(BaseDAModel):
             Q: np.ndarray,
             QRP: np.ndarray,
             eQ: np.ndarray,
-            DA_config: config.Data) -> list:
+            DA_config: config.Data,
+            weights: Iterable) -> tuple[list, Iterable]:
         # Number members
         N = DA_config.N
 
@@ -55,4 +58,4 @@ class DAModel(BaseDAModel):
             for j, res in enumerate(DA_config.updated_res):
                 state_variables[i][res] = Xa[j][i]
 
-        return state_variables
+        return state_variables, weights

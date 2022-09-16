@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import numpy as np
 import spotpy.parameter
@@ -45,6 +45,7 @@ def load_forecast_data(filepath: str, file_format: str, config: Config, sar_mode
         forecast_data['dates'] = np.array(
             [datetime(year=d[0], month=d[1], day=d[2], hour=d[3], minute=d[4], second=d[5]) for d in forecast_data.pop('Date')]
         )
+        forecast_data['leadTime'] = np.array([timedelta(days=d) for d in forecast_data['leadTime']])  # Array that contains the forecast lead time in day unit
 
     else:
         raise ValueError(f'"{file_format}" file_format not supported/not found.')

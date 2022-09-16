@@ -126,6 +126,7 @@ def crop_data(config: Config,
 
             forecast_data['dates'] = observations['dates'][select_forecast]
             forecast_data['leadTime'] = np.arange(1, config.forecast.horizon+1) * time_step / 24
+            forecast_data['leadTime'] = np.array([datetime.timedelta(days=d) for d in forecast_data['leadTime']])  # Array that contains the forecast lead time in day unit
 
             if time_step % 24 != 0:  # Set to NaN values that corresponds to a date that isn't a date when a hydrological forecast is issued
                                      # (only when modeling time step is smaller than 24 hours, otherwise 1 forecast per day is issued)

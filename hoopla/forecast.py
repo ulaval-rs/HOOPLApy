@@ -11,11 +11,13 @@ def make_forecast(
         config: Config,
         observations: dict,
         observations_for_warm_up: dict,
+        observations_for_forecast: dict,
         hydro_model: BaseHydroModel,
         pet_model: BasePETModel,
         sar_model: BaseSARModel,
         da_model: BaseDAModel,
-        parameters: list[float]):
+        parameters: list[float],
+        filepath_results: str):
     # Run forecast
     if config.forecast.meteo_ens:
         raise NotImplementedError
@@ -23,6 +25,7 @@ def make_forecast(
             config=config,
             observations=observations,
             observations_for_warm_up=observations_for_warm_up,
+            observations_for_forecast=observations_for_forecast,
             hydro_model=hydro_model,
             pet_model=pet_model,
             sar_model=sar_model,
@@ -30,11 +33,11 @@ def make_forecast(
             parameters=parameters
         )
     else:
-        print(observations.keys())
         TODO = forecast(
             config=config,
             observations=observations,
             observations_for_warm_up=observations_for_warm_up,
+            observations_for_forecast=observations_for_forecast,
             hydro_model=hydro_model,
             pet_model=pet_model,
             sar_model=sar_model,
@@ -42,15 +45,15 @@ def make_forecast(
             parameters=parameters
         )
 
-
     # Save Results
-    pass
+    raise NotImplementedError(f'save at {filepath_results}')
 
 
 def forecast(
         config: Config,
         observations: dict,
         observations_for_warm_up: dict,
+        observations_for_forecast: dict,
         hydro_model: BaseHydroModel,
         pet_model: BasePETModel,
         sar_model: BaseSARModel,
@@ -73,9 +76,13 @@ def forecast(
         operation='forecast',
         observations=observations,
         observations_for_warmup=observations_for_warm_up,
+        observations_for_forecast=observations_for_forecast,
         pet_model=pet_model,
         sar_model=sar_model,
         da_model=da_model
     )
+
+    return hydro_model.simulation(parameters)
+
 
 

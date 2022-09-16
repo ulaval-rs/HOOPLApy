@@ -63,20 +63,6 @@ def simulate(config: Config,
         config.data.updated_res = all_model_updated_res[hydro_model.name()]
 
     # Simulation
-    if config.data.do_data_assimilation:
-        observations, weights = assimilation.initialize(observations, config)
-
-        hydro_model.setup(
-            config=config,
-            operation='simulation',
-            observations=observations,
-            observations_for_warmup=observations_for_warm_up,
-            pet_model=pet_model,
-            sar_model=sar_model,
-            da_model=da_model
-        )
-        return hydro_model.simulation(parameters)
-
     hydro_model.setup(
         config=config,
         operation='simulation',

@@ -50,6 +50,7 @@ forecast_data = data.load_forecast_data(
 
 calibration_file_results = f'./results/calibration-C={catchment_name}-H={hydro_model.name()}-E={pet_model.name()}-S={sar_model.name()}.json'
 simulation_file_results = f'./results/simulation-C={catchment_name}-H={hydro_model.name()}-E={pet_model.name()}-S={sar_model.name()}.json'
+forecast_file_results = f'./results/forecast-C={catchment_name}-H={hydro_model.name()}-E={pet_model.name()}-S={sar_model.name()}.json'
 
 # Calibration
 # -----------
@@ -142,16 +143,16 @@ if config.operations.forecast:
         forecast_data=forecast_data
     )
 
-    raise NotImplementedError('Ajout forecast data')
     print('Starting forecast')
     make_forecast(
         observations=observations,
         observations_for_warm_up=observations_for_warm_up,
+        observations_for_forecast=observations_for_forecast,
         config=config,
         hydro_model=hydro_model,
         pet_model=pet_model,
         sar_model=sar_model,
         da_model=da_model,
         parameters=calibrated_params,
-        filepath_results=simulation_file_results
+        filepath_results=forecast_file_results
     )

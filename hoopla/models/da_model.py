@@ -22,5 +22,6 @@ class BaseDAModel:
             Q: np.ndarray,
             QRP: np.ndarray,
             eQ: np.ndarray,
-            DA_config: config.Data) -> tuple[dict, dict]:
+            DA_config: config.Data,
+            weights: Iterable) -> tuple[list, Iterable]:
         raise NotImplementedError
