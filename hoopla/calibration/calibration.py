@@ -60,6 +60,7 @@ def make_calibration(config: Config,
         'SAR_model': sar_model.name(),
         'Qsim': list(simulated_streamflow),
         'best_parameters': best_params,
+        'observations': observations
     }
 
     with open(filepath_results, 'w') as file:

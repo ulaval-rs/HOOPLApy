@@ -73,9 +73,9 @@ if config.operations.calibration:
 
     # Crop observed data according to specified dates and warm up
     print('Removing unused data ...')
-    observations, _, observations_for_warm_up = data.crop_data(
+    observations_for_calibration, _, observations_for_warm_up = data.crop_data(
         config=config,
-        observations=observations,
+        observations=observations.copy(),
         hydro_model=hydro_model,
         pet_model=pet_model,
         sar_model=sar_model,
@@ -84,7 +84,7 @@ if config.operations.calibration:
 
     print('Starting calibration ...')
     make_calibration(
-        observations=observations,
+        observations=observations_for_calibration,
         observations_for_warm_up=observations_for_warm_up,
         config=config,
         hydro_model=hydro_model,
@@ -103,9 +103,9 @@ if config.operations.simulation:
 
     # Crop data for the simulation
     print('Removing unused data ...')
-    observations, _, observations_for_warm_up = data.crop_data(
+    observations_for_simulation, _, observations_for_warm_up = data.crop_data(
         config=config,
-        observations=observations,
+        observations=observations.copy(),
         hydro_model=hydro_model,
         pet_model=pet_model,
         sar_model=sar_model,
@@ -114,7 +114,7 @@ if config.operations.simulation:
 
     print('Starting simulation ...')
     make_simulation(
-        observations=observations,
+        observations=observations_for_simulation,
         observations_for_warm_up=observations_for_warm_up,
         config=config,
         hydro_model=hydro_model,
@@ -135,7 +135,7 @@ if config.operations.forecast:
     print('Removing unused data ...')
     observations, observations_for_forecast, observations_for_warm_up = data.crop_data(
         config=config,
-        observations=observations,
+        observations=observations.copy(),
         hydro_model=hydro_model,
         pet_model=pet_model,
         sar_model=sar_model,

@@ -39,6 +39,7 @@ def make_simulation(config: Config,
         'PET_model': pet_model.name(),
         'SAR_model': sar_model.name(),
         'Qsim': list(simulated_streamflow),
+        'observations': observations
     }
 
     with open(filepath_results, 'w') as file:
