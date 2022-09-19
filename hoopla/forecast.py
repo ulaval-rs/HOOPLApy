@@ -1,3 +1,6 @@
+import json
+import warnings
+
 from scipy.io import loadmat
 
 from hoopla.config import Config
@@ -33,7 +36,7 @@ def make_forecast(
             parameters=parameters
         )
     else:
-        TODO = forecast(
+        simulated_streamflow = forecast(
             config=config,
             observations=observations,
             observations_for_warm_up=observations_for_warm_up,
@@ -46,7 +49,16 @@ def make_forecast(
         )
 
     # Save Results
-    raise NotImplementedError(f'save at {filepath_results}')
+    results = {
+        'hydro_model': hydro_model.name(),
+        'PET_model': pet_model.name(),
+        'SAR_model': sar_model.name(),
+        'Qsim': list(simulated_streamflow),
+    }
+
+    with open(filepath_results, 'w') as file:
+        warnings.warn('TODO: Add more information when saving the forecast results file.')
+        json.dump(results, file, indent=4)
 
 
 def forecast(
@@ -68,9 +80,6 @@ def forecast(
         config.data.updated_res = all_model_updated_res[hydro_model.name()]
 
     # Simulation
-    if config.data.do_data_assimilation:
-        raise NotImplementedError
-
     hydro_model.setup(
         config=config,
         operation='forecast',

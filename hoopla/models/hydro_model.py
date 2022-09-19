@@ -358,7 +358,7 @@ class BaseHydroModel:
                   params: Union[ParameterSet, Sequence[float]],
                   state_variables_warmup: dict = None,
                   sar_state_variables_warmup: dict = None) -> np.ndarray:
-        sar_results_forecast = {}
+        # sar_results_forecast = {}  # TODO remove this
 
         # Data assimilation initialization
         if self.config.data.do_data_assimilation:
@@ -398,8 +398,8 @@ class BaseHydroModel:
         Q_forecast = np.empty(shape=(nbr_forecast_issue, self.config.forecast.horizon))
         Q_forecast[:] = np.nan
 
-        if self.config.general.compute_snowmelt:
-            sar_results_forecast['runOff_d'] = np.empty(shape=(nbr_forecast_issue, self.config.forecast.horizon))
+        # if self.config.general.compute_snowmelt:
+        #     sar_results_forecast['runOff_d'] = np.empty(shape=(nbr_forecast_issue, self.config.forecast.horizon))
 
         # Run simulation
         simulated_streamflow = []  # Container for results
@@ -449,12 +449,28 @@ class BaseHydroModel:
                     for i in range(self.config.forecast.horizon):
                         # Snow
                         i_date = self.observations_for_forecast['dates'][t] + self.observations_for_forecast['leadTime'][i]
-                        sar_results_forecast['runOff_d'], sar_state_variables_forecast = self.sar_model.prepare(
-                            TODO
+                        runoff_d, sar_state_variables_forecast = self.sar_model.run(
+                            model_inputs={
+                                'P': self.observations_for_forecast['P'][t, i],
+                                'T': self.observations_for_forecast['T'][t, i],
+                                'Tmin': self.observations_for_forecast['Tmin'][t, i],
+                                'Tmax': self.observations_for_forecast['Tmax'][t, i],
+                                'Date': i_date,
+                            },
+                            params=params,
+                            state_variables=sar_state_variables_forecast
                         )
-                    raise NotImplementedError
+                        Q_forecast[t, i], params_forecast = self.run(
+                            model_inputs={
+                                'P': runoff_d,
+                                'E': self.observations_for_forecast['E'][t, i],
+                            },
+                            params=params,
+                            state_variables=state_variables
+                        )
 
         else:
+            # With snow accounting
             for t, _ in enumerate(self.observations['dates']):
                 Qsim, state_variables = self.run(
                     model_inputs={'P': self.observations['P'][t], 'E': E[t]},
@@ -462,6 +478,36 @@ class BaseHydroModel:
                     state_variables=state_variables
                 )
                 simulated_streamflow.append(Qsim)
+
+                # Hydrological Forecast
+                if not np.any(np.isnan(self.observations_for_forecast['P'][t])):
+                    if self.config.general.compute_pet:
+                        data_forecast_pet = {}
+                        data_forecast_pet['dates'] = self.observations_for_forecast['dates'][t] + self.observations_for_forecast['leadTime']
+                        data_forecast_pet['T'] = self.observations_for_forecast['T'][t]
+                        data_forecast_pet['Tmin'] = self.observations_for_forecast['Tmin'][t]
+                        data_forecast_pet['Tmax'] = self.observations_for_forecast['Tmax'][t]
+                        data_forecast_pet = {**self.observations, **data_forecast_pet}
+
+                        pet_params = self.pet_model.prepare(
+                            time_step=self.config.general.time_step,
+                            model_inputs={'dates': data_forecast_pet['dates'], 'T': data_forecast_pet['T']},
+                            hyper_parameters={'latitude': data_forecast_pet['latitude']}
+                        )
+                        self.observations_for_forecast['E'][t] = self.pet_model.run(pet_params)
+
+                    # Set the initial forecast states with the ones obtained from simulation
+                    state_variables_forecast = state_variables
+                    # Loop over lead times
+                    for i in range(self.config.forecast.horizon):
+                        Q_forecast[t, i], params_forecast = self.run(
+                            model_inputs={
+                                'P': self.observations_for_forecast['P'][t, i],
+                                'E': self.observations_for_forecast['E'][t, i],
+                            },
+                            params=params,
+                            state_variables=state_variables
+                        )
 
         return np.array(simulated_streamflow)
 
