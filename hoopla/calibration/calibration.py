@@ -9,6 +9,7 @@ from spotpy import objectivefunctions
 
 from hoopla.calibration.optimization import shuffled_complex_evolution, dds
 from hoopla.config import Config
+from hoopla.models import util
 from hoopla.models.hydro_model import BaseHydroModel
 from hoopla.models.pet_model import BasePETModel
 from hoopla.models.sar_model import BaseSARModel
@@ -60,12 +61,11 @@ def make_calibration(config: Config,
         'SAR_model': sar_model.name(),
         'Qsim': list(simulated_streamflow),
         'best_parameters': best_params,
-        'observations': observations
+        'observations': util.serialize_data(observations)
     }
 
     with open(filepath_results, 'w') as file:
-        warnings.warn('TODO: Add more information when saving the calibration results file.')
-        json.dump(results, file, indent=4)
+        json.dump(results, file, indent=4, default=str)
 
 
 def calibrate(config: Config,

@@ -52,10 +52,6 @@ def crop_data(config: Config,
     ## Get indices of the dates of interest
     dates = observations['dates']
     select = np.array([date_begin <= d <= date_end for d in dates])  # Array of True and False corresponding to the indexes to keep.
-    print(date_begin < min(dates))
-    print(date_begin > max(dates), date_begin, max(dates))
-    print(date_end > max(dates), date_end, max(dates))
-    print(date_end < min(dates))
 
     if date_begin < min(dates) or date_begin > max(dates) or date_end > max(dates) or date_end < min(dates):
         raise ValueError(

@@ -2,7 +2,7 @@
 
 [operations]
 calibration = false  # Run calibration
-simulation  = true  # Run simulation
+simulation  = false  # Run simulation
 forecast    = true  # Run forecast
 
 [dates]
@@ -22,11 +22,11 @@ compute_snowmelt = true  # Compute snowmelt
 compute_warm_up  = true # Add warm up before modelling
 export_light     = true  # Export fewer data(/results) to save space
 overwrite        = true  # Overwrite existing files created by HOOPLA
-seed             = 'None'    # Seed for random number generation. If seed is 'None', then use random seed each run.
+seed             = 42    # Seed for random number generation. If seed is 'None', then use random seed each run.
 
 [calibration]
 export         = true  # Export calibrated parameters to ./Data for future Simulat/Forecastce calibration is performed
-calibrate_snow = false # Calibrate snow module (if 0, default values are used)
+calibrate_snow = true # Calibrate snow module (if 0, default values are used)
 method         = 'SCE' # Choose between 'DDS' and 'SCE'
 remove_winter  = true  # Remove the Quebec "ice months" (dec, jan, fev, mar)
 score          = 'RMSE' # Performance criteron (RMSE, MSE, NSE, etc.)

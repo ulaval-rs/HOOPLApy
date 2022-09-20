@@ -4,6 +4,7 @@ import warnings
 from scipy.io import loadmat
 
 from hoopla.config import Config
+from hoopla.models import util
 from hoopla.models.da_model import BaseDAModel
 from hoopla.models.hydro_model import BaseHydroModel
 from hoopla.models.pet_model import BasePETModel
@@ -54,12 +55,11 @@ def make_forecast(
         'PET_model': pet_model.name(),
         'SAR_model': sar_model.name(),
         'Qsim': list(simulated_streamflow),
-        'observations': observations
+        'observations': util.serialize_data(observations)
     }
 
     with open(filepath_results, 'w') as file:
-        warnings.warn('TODO: Add more information when saving the forecast results file.')
-        json.dump(results, file, indent=4)
+        json.dump(results, file, indent=4, default=str)
 
 
 def forecast(
