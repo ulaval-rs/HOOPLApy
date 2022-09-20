@@ -4,6 +4,7 @@
 !LICENSE
 !poetry.lock
 !pyproject.toml
+!README.md
 
 !main.py
 !config.toml

@@ -1,13 +1,13 @@
 # HOOPLApy config file
 
 [operations]
-calibration = false  # Run calibration
-simulation  = false  # Run simulation
+calibration = true  # Run calibration
+simulation  = true  # Run simulation
 forecast    = true  # Run forecast
 
 [dates]
 #calibration.begin = 1997-01-01T03:00:00
-calibration.begin = 2005-01-01T03:00:00
+calibration.begin = 2000-01-01T03:00:00
 calibration.end   = 2007-01-10T00:00:00
 simulation.begin  = 2010-01-01T03:00:00
 simulation.end    = 2015-01-01T00:00:00
