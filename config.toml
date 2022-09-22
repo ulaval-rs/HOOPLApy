@@ -19,10 +19,11 @@ verbose          = true  # Verbose. Display information about computing
 time_step        = '3h'  # Computation time step. Choose between '3h' and '24h'
 compute_pet      = true  # Compute PET
 compute_snowmelt = true  # Compute snowmelt
-compute_warm_up  = true # Add warm up before modelling
+compute_warm_up  = true  # Add warm up before modelling
 export_light     = true  # Export fewer data(/results) to save space
 overwrite        = true  # Overwrite existing files created by HOOPLA
 seed             = 42    # Seed for random number generation. If seed is 'None', then use random seed each run.
+parallelism      = false # Run models in parallel
 
 [calibration]
 export         = true  # Export calibrated parameters to ./Data for future Simulat/Forecastce calibration is performed
@@ -54,3 +55,9 @@ N                    = 50     # Ensemble size
 
 PF.resample_tech   = 'systematic_resampling' # resampling technique. Either 'multinomial_resampling' or 'systematic_resampling'
 PF.resample_thresh = inf                     # Particle effective ensemble size before resampling. Included in [0 N]. 0 = never resample, ..., N = resample at each time step
+
+[models]
+hydro_models = ['HydroMod1']
+pet_models   = ['Oudin']
+sar_models   = ['CemaNeige']
+da_models    = ['EnsembleKalmanFilter']

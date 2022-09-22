@@ -3,6 +3,8 @@ from typing import Sequence
 
 import numpy as np
 
+from hoopla.config import Config
+
 
 def find_day_of_year(date: datetime) -> float:
     """Compute day of the year (1st jan = 1, 31 dec = 365)"""
@@ -33,3 +35,21 @@ def serialize_data(data: dict) -> dict:
             result[k] = v
 
     return result
+
+
+def make_combinations(config: Config) -> list[dict]:
+    models_combination = []
+
+    for hydro_model_name in config.models.hydro_models:
+        for pet_model_name in config.models.pet_models:
+            for sar_model_name in config.models.sar_models:
+                for da_model_name in config.models.da_models:
+                    models_combination.append({
+                        'config': config,
+                        'hydro_model_name': hydro_model_name,
+                        'pet_model_name': pet_model_name,
+                        'sar_model_name': sar_model_name,
+                        'da_model_name': da_model_name
+                    })
+
+    return models_combination

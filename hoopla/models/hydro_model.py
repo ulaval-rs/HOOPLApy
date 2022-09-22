@@ -8,7 +8,7 @@ from spotpy.parameter import ParameterSet
 from hoopla import assimilation
 from hoopla.models.da_model import BaseDAModel
 from hoopla.models.sar_model import BaseSARModel
-from hoopla.models.util import find_non_winter_indexes
+from hoopla.util import find_non_winter_indexes
 from hoopla.config import Config
 from hoopla.models.pet_model import BasePETModel
 

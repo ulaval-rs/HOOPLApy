@@ -1,12 +1,10 @@
 import json
 import os
-import warnings
 
 from scipy.io import loadmat
 
-from hoopla import assimilation
+from hoopla import util
 from hoopla.config import Config
-from hoopla.models import util
 from hoopla.models.da_model import BaseDAModel
 from hoopla.models.hydro_model import BaseHydroModel
 from hoopla.models.pet_model import BasePETModel

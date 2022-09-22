@@ -44,6 +44,7 @@ class General:
     export_light: bool
     overwrite: bool
     seed: Any
+    parallelism: bool
 
 
 @dataclass
@@ -82,6 +83,14 @@ class Data:
 
 
 @dataclass
+class Models:
+    hydro_models: list[str]
+    pet_models: list[str]
+    sar_models: list[str]
+    da_models: list[str]
+
+
+@dataclass
 class Config:
     operations: Operations
     dates: Dates
@@ -89,6 +98,7 @@ class Config:
     calibration: Calibration
     forecast: Forecast
     data: Data
+    models: Models
 
     def __post_init__(self):
         self.operations = Operations(**self.operations)
@@ -97,6 +107,7 @@ class Config:
         self.calibration = Calibration(**self.calibration)
         self.forecast = Forecast(**self.forecast)
         self.data = Data(**self.data)
+        self.models = Models(**self.models)
 
 
 def load_config(path: str) -> Config:

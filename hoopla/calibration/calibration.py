@@ -1,6 +1,5 @@
 import json
 import os
-import warnings
 from typing import Sequence
 
 import numpy as np
@@ -9,7 +8,7 @@ from spotpy import objectivefunctions
 
 from hoopla.calibration.optimization import shuffled_complex_evolution, dds
 from hoopla.config import Config
-from hoopla.models import util
+from hoopla import util
 from hoopla.models.hydro_model import BaseHydroModel
 from hoopla.models.pet_model import BasePETModel
 from hoopla.models.sar_model import BaseSARModel

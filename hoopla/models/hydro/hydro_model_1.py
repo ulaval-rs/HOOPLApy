@@ -1,4 +1,4 @@
-from typing import Dict, Sequence, Tuple
+from typing import Dict, Tuple
 
 import numpy as np
 from spotpy.parameter import ParameterSet

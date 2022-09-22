@@ -8,7 +8,7 @@ from hoopla.config import Config
 from hoopla.models.hydro_model import BaseHydroModel
 from hoopla.models.pet_model import BasePETModel
 from hoopla.models.sar_model import BaseSARModel
-from hoopla.models.util import find_day_of_year
+from hoopla.util import find_day_of_year
 
 
 def crop_data(config: Config,

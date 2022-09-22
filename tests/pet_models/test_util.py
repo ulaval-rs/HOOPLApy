@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 
-from hoopla.models.util import find_day_of_year
+from hoopla.util import find_day_of_year
 
 
 @pytest.mark.parametrize('date, expected_day_number', [

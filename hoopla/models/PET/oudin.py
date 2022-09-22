@@ -1,7 +1,7 @@
 import numpy as np
 
 from hoopla.models.pet_model import BasePETModel
-from hoopla.models.util import find_day_of_year
+from hoopla.util import find_day_of_year
 
 GSC = 0.082  # (MJ / m2 / min)
 RHO = 1000  # (kg / L)
