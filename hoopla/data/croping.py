@@ -185,6 +185,8 @@ def crop_data(config: Config,
             for obs in cropable_data_obs:
                 observations_for_warm_up[obs] = observations[obs][index_warmup]
 
+            observations_for_warm_up = {**observations, **observations_for_warm_up}
+
     for obs in cropable_data_obs:
         observations[obs] = observations[obs][select]
 
