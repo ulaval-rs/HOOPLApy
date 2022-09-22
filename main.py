@@ -40,14 +40,6 @@ observations = data.load_observations(
     sar_model=sar_model
 )
 
-# Load meteo forecast data
-forecast_data = data.load_forecast_data(
-    filepath=f'{DATA_PATH}/{config.general.time_step}/Det_met_fcast/Met_fcast_{catchment_name}.mat',
-    file_format='mat',
-    config=config,
-    sar_model=sar_model
-)
-
 calibration_file_results = f'./results/calibration-C={catchment_name}-H={hydro_model.name()}-E={pet_model.name()}-S={sar_model.name()}.json'
 simulation_file_results = f'./results/simulation-C={catchment_name}-H={hydro_model.name()}-E={pet_model.name()}-S={sar_model.name()}.json'
 forecast_file_results = f'./results/forecast-C={catchment_name}-H={hydro_model.name()}-E={pet_model.name()}-S={sar_model.name()}.json'
@@ -127,6 +119,25 @@ if config.operations.simulation:
 
 # Forecast
 if config.operations.forecast:
+    # Load meteo forecast data
+    if config.forecast.meteo_ens:
+        # Meteorological ensemble prediction data
+        forecast_data = data.load_ens_met_data(
+            filepath=f'{DATA_PATH}/{config.general.time_step}/Ens_met_fcast/Met_fcast_{catchment_name}.mat',
+            file_format='mat',
+            config=config,
+            sar_model=sar_model
+        )
+    else:
+        forecast_data = data.load_forecast_data(
+            filepath=f'{DATA_PATH}/{config.general.time_step}/Det_met_fcast/Met_fcast_{catchment_name}.mat',
+            file_format='mat',
+            config=config,
+            sar_model=sar_model
+        )
+
+
+    # Load calibrated model parameters
     calibrated_params = data.load_calibrated_model_parameters(
         filepath=calibration_file_results
     )
