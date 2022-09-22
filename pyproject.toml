@@ -12,6 +12,7 @@ toml = "^0.10.2"
 spotpy = "^1.5.14"
 matplotlib = "^3.5.1"
 filterpy = "^1.4.5"
+mat73 = "^0.59"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"

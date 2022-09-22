@@ -1,5 +1,4 @@
 import json
-import warnings
 
 from scipy.io import loadmat
 
@@ -23,19 +22,8 @@ def make_forecast(
         parameters: list[float],
         filepath_results: str):
     # Run forecast
-    if config.forecast.meteo_ens:
+    if config.forecast.meteo_ens:  # Meteorological ensemble prediction system
         raise NotImplementedError
-        TODO = forecast(
-            config=config,
-            observations=observations,
-            observations_for_warm_up=observations_for_warm_up,
-            observations_for_forecast=observations_for_forecast,
-            hydro_model=hydro_model,
-            pet_model=pet_model,
-            sar_model=sar_model,
-            da_model=da_model,
-            parameters=parameters
-        )
     else:
         simulated_streamflow = forecast(
             config=config,
@@ -58,8 +46,16 @@ def make_forecast(
         'observations': util.serialize_data(observations)
     }
 
-    with open(filepath_results, 'w') as file:
-        json.dump(results, file, indent=4, default=str)
+    if os.path.exists(filepath_results):
+        if config.general.overwrite:
+            print(f'{filepath_results} exists, overwriting ...')
+            with open(filepath_results, 'w') as file:
+                json.dump(results, file, indent=4, default=str)
+        else:
+            print(f'{filepath_results} exists, with "overwrite=false", not saving results.')
+    else:
+        with open(filepath_results, 'w') as file:
+            json.dump(results, file, indent=4, default=str)
 
 
 def forecast(

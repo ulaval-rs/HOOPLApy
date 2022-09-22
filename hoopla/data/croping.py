@@ -165,9 +165,25 @@ def crop_data(config: Config,
             day_of_year_start = (date_begin - datetime.datetime(year=date_begin.year, month=1, day=1)).seconds / 60 / 60 / 24  # Days of the year of the first day of simulation
             day_of_year_end_warm_up = (day_of_year_start - time_step / 24) % 365  # Day of the year of the last timestep of the warm up.
 
-            index_warmup_end = np.argwhere(days_of_year == day_of_year_end_warm_up)  # Indices of the end of each sliding year.
+            index_warmup_end = np.argwhere(days_of_year == day_of_year_end_warm_up).flatten()  # Indices of the end of each sliding year.
             index_warmup_start = index_warmup_end - 365 * 24 / time_step + 1  # indices of the start of each sliding year.
-            raise NotImplementedError
+            index_warmup_start = index_warmup_start.astype(int)
+
+            index_warmup_end = index_warmup_end[1:]  # Removes the 1rst year last timestep index as there is no corresponding first timestep
+            index_warmup_start = index_warmup_start[1:]  # Removes the 1rst year last timestep index as there is no corresponding first timestep
+
+            # Find the average sliding year in terms of precipitation
+            yearly_P = np.empty(shape=(np.size(index_warmup_start)))
+            yearly_P[:] = np.nan
+            for i_year in range(np.size(index_warmup_start)):
+                yearly_P[i_year] = np.sum(observations['P'][index_warmup_start[i_year]:index_warmup_end[i_year]])  # Compute the total precipitation of each sliding year
+
+            i_min_year_P = np.argmin(np.abs(yearly_P - np.mean(yearly_P)))
+            index_warmup = np.arange(index_warmup_start[i_min_year_P], index_warmup_end[i_min_year_P])
+
+            # Retrieve the data of the sliding average warm up year
+            for obs in cropable_data_obs:
+                observations_for_warm_up[obs] = observations[obs][index_warmup]
 
     for obs in cropable_data_obs:
         observations[obs] = observations[obs][select]

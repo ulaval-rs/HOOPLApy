@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timedelta
 
 import numpy as np
+import mat73
 import spotpy.parameter
 from scipy.io import loadmat
 
@@ -13,7 +14,11 @@ from hoopla.models.sar_model import BaseSARModel
 
 def load_observations(path: str, file_format: str, config: Config, pet_model: BasePETModel, sar_model: BaseSARModel) -> dict:
     if file_format == 'mat':
-        observation_dict = loadmat(file_name=path, simplify_cells=True)
+        try:
+            observation_dict = loadmat(file_name=path, simplify_cells=True)
+        except NotImplementedError:
+            observation_dict = mat73.loadmat(filename=path)
+
         observation_dict = {k: v for k, v in observation_dict.items() if '__' not in k}
 
         # Transformation specific to the .mat files
@@ -39,12 +44,18 @@ def load_observations(path: str, file_format: str, config: Config, pet_model: Ba
 
 def load_forecast_data(filepath: str, file_format: str, config: Config, sar_model: BaseSARModel) -> dict:
     if file_format == 'mat':
-        forecast_data = loadmat(file_name=filepath, simplify_cells=True)
+        try:
+            forecast_data = loadmat(file_name=filepath, simplify_cells=True)
+        except NotImplementedError:
+            forecast_data = mat73.loadmat(filename=filepath)
 
         forecast_data['P'] = forecast_data.pop('Pt')
         forecast_data['dates'] = np.array(
             [datetime(year=d[0], month=d[1], day=d[2], hour=d[3], minute=d[4], second=d[5]) for d in forecast_data.pop('Date')]
         )
+
+        if forecast_data['leadTime'].dtype != float:
+            forecast_data['leadTime'] = forecast_data['leadTime'].astype(float)
         forecast_data['leadTime'] = np.array([timedelta(days=d) for d in forecast_data['leadTime']])  # Array that contains the forecast lead time in day unit
 
     else:
@@ -58,7 +69,10 @@ def load_forecast_data(filepath: str, file_format: str, config: Config, sar_mode
 def load_model_parameters(filepath: str, model_name: str, file_format: str) -> list[spotpy.parameter.Base]:
     """The models boundaries correspond to the initial value and the min and max values of each model parameters."""
     if file_format == 'mat':
-        param_boundaries = loadmat(file_name=filepath, simplify_cells=True)
+        try:
+            param_boundaries = loadmat(file_name=filepath, simplify_cells=True)
+        except NotImplementedError:
+            param_boundaries = mat73.loadmat(filename=filepath)
 
         try:
             param_boundaries = param_boundaries[model_name]
@@ -89,7 +103,10 @@ def load_sar_model_parameters(
         filepath: str, model_name: str, file_format: str,
         calibrate_snow: bool) -> list[spotpy.parameter.Base]:
     if file_format == 'mat':
-        param_boundaries = loadmat(file_name=filepath, simplify_cells=True)
+        try:
+            param_boundaries = loadmat(file_name=filepath, simplify_cells=True)
+        except NotImplementedError:
+            param_boundaries = mat73.loadmat(filename=filepath)
 
         try:
             param_boundaries = param_boundaries[model_name]
@@ -132,3 +149,26 @@ def load_calibrated_model_parameters(filepath: str, file_format: str = 'json') -
         raise ValueError(f'"{file_format}" file_format not supported/not found.')
 
     return calibrated_params
+
+
+def load_ens_met_data(filepath: str, file_format: str, config: Config, sar_model: BaseSARModel) -> dict:
+    if file_format == 'mat':
+        try:
+            forecast_data = loadmat(file_name=filepath, simplify_cells=True)
+        except NotImplementedError:
+            forecast_data = mat73.loadmat(filename=filepath)
+
+        forecast_data['dates'] = np.array(
+            [datetime(year=int(d[0]), month=int(d[1]), day=int(d[2]), hour=int(d[3]), minute=int(d[4]), second=int(d[5])) for d in forecast_data.pop('Date')]
+        )
+
+        if forecast_data['leadTime'].dtype != float:
+            forecast_data['leadTime'] = forecast_data['leadTime'].astype(float)
+        forecast_data['leadTime'] = np.array([timedelta(days=d) for d in forecast_data['leadTime']])  # Array that contains the ens_met lead time in day unit
+
+    else:
+        raise ValueError(f'"{file_format}" file_format not supported/not found.')
+
+    forecast_data = validation.validate_meteorological_forecast(config, forecast_data, sar_model)
+
+    return forecast_data

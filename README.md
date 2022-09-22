@@ -23,7 +23,7 @@ Support for new formats can be added in the `./hoopla/data/loaders.py` file.
 
 
 To run HOOPLApy, run the `main.py` file, which is the equivalent
-of the `` from the original HOOPLA project.
+of the `launch_HOOPLA.m` file from the original HOOPLA project.
 ```sh
 python main.py
 ```

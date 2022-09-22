@@ -64,8 +64,16 @@ def make_calibration(config: Config,
         'observations': util.serialize_data(observations)
     }
 
-    with open(filepath_results, 'w') as file:
-        json.dump(results, file, indent=4, default=str)
+    if os.path.exists(filepath_results):
+        if config.general.overwrite:
+            print(f'{filepath_results} exists, overwriting ...')
+            with open(filepath_results, 'w') as file:
+                json.dump(results, file, indent=4, default=str)
+        else:
+            print(f'{filepath_results} exists, with "overwrite=false", not saving results.')
+    else:
+        with open(filepath_results, 'w') as file:
+            json.dump(results, file, indent=4, default=str)
 
 
 def calibrate(config: Config,

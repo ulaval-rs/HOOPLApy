@@ -4,11 +4,13 @@ from typing import Sequence
 import numpy as np
 
 
-def find_day_of_year(date: datetime) -> int:
+def find_day_of_year(date: datetime) -> float:
     """Compute day of the year (1st jan = 1, 31 dec = 365)"""
     date_interval = date - datetime(year=date.year, month=1, day=1)
 
-    return date_interval.days + 1
+    # In the original HOOPLA implementation, it returns fractional days
+    # 1 day = 24h = 24 * 60 minutes = 24 * 60 * 60 seconds
+    return date_interval.days + date_interval.seconds / (60*60*24)
 
 
 def find_non_winter_indexes(dates: Sequence[datetime]):
